@@ -1,0 +1,15 @@
+{
+    "comparisons": [
+      {
+        "id": 1,
+        "text1": "Plagiarism involves copying someone else's work without giving them credit.",
+        "text2": "Plagiarism is the act of using another person's work and pretending it is your own."
+      },
+      {
+        "id": 2,
+        "text1": "To compute the derivative, apply the chain rule.",
+        "text2": "Applying the chain rule allows for the computation of derivatives."
+      }
+    ]
+  }
+  
