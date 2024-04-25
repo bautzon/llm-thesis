@@ -14,20 +14,10 @@ def read_json_file(file_path='/Users/bau/Library/CloudStorage/OneDrive-ITU/Thesi
         data = json.load(file)
     return data['comparisons']
 
-# Convert text to vector using the Word2Vec model
-def text_to_vector(text, model):
-    words = text.split()
-    word_vectors = np.array([model[word] for word in words if word in model])
-    if word_vectors.size > 0:
-        return np.mean(word_vectors, axis=0)
-    return None
-
-# Generate word pairs from text
 def generate_word_pairs(text):
     words = text.split()
     return [(words[i], words[i + 1]) for i in range(len(words) - 1)]
 
-# Calculate Euclidean distances for word pairs and return average
 def calculate_distances_for_text(text, model):
     word_pairs = generate_word_pairs(text)
     distances = [distance.euclidean(model[word1], model[word2])
@@ -49,13 +39,30 @@ for comparison in json_data:
     if avg_dist2 is not None:
         text2_distances.append(avg_dist2)
 
-# Plotting the data
-plt.figure(figsize=(10, 5))
+# Calculate derivatives of the distance arrays
+text1_derivatives = np.gradient(text1_distances)
+text2_derivatives = np.gradient(text2_distances)
+
+# Plotting the original distance data
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
 plt.plot(text1_distances, label='Text 1 Distances', marker='o', color='b')
 plt.plot(text2_distances, label='Text 2 Distances', marker='x', color='r')
-plt.title('Average Euclidean Distances for Word Pairs from Text1 vs. Text2')
+plt.title('Average Euclidean Distances for Word Pairs')
 plt.xlabel('Comparison Index')
 plt.ylabel('Average Distance')
 plt.legend()
 plt.grid(True)
+
+# Plotting the derivatives of the distances
+plt.subplot(1, 2, 2)
+plt.plot(text1_derivatives, label='Derivative of Text 1 Distances', marker='o', linestyle='--', color='b')
+plt.plot(text2_derivatives, label='Derivative of Text 2 Distances', marker='x', linestyle='--', color='r')
+plt.title('Derivatives of Distances')
+plt.xlabel('Comparison Index')
+plt.ylabel('Rate of Change in Distance')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
 plt.show()
