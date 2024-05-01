@@ -2,13 +2,13 @@
     "comparisons": [
       {
         "id": 1,
-        "text1": "Plagiarism involves copying someone else's work without giving them credit.",
-        "text2": "Plagiarism is the act of using another person's work and pretending it is your own."
+        "prompt": "This text was obviously written by a human that is also why there might be spelling erros and there is no punktuation. Also here is a good place towrtie something bery random, this should furthermore probably be a longer text as this would very much instead help me se if this was human og robot written.",
+        "answer": "Following trext has been executed by a computer, Hello I am a computer my name is GlassPear because Windows and apple were both taken. MY mother name is Beeb Bop. She is also not human she is a robot. 01010101 That is the COmputer communication"
       },
       {
         "id": 2,
-        "text1": "To compute the derivative, apply the chain rule.",
-        "text2": "Applying the chain rule allows for the computation of derivatives."
+        "prompt": "To compute the derivative, apply the chain rule.",
+        "answer": "Applying the chain rule allows for the computation of derivatives."
       }
     ]
   }
