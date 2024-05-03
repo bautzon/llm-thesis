@@ -6,11 +6,11 @@ from scipy.spatial import distance
 
 # Load the Word2Vec model
 #Todo! Add URL to source
-model_path = '/Users/bau/Library/CloudStorage/OneDrive-ITU/Thesis/llm-thesis/GoogleNews-vectors-negative300.bin' 
+model_path = 'GoogleNews-vectors-negative300.bin' 
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
 # Read JSON file
-def read_json_file(file_path='/Users/bau/Library/CloudStorage/OneDrive-ITU/Thesis/llm-thesis/Test-Data/combined.json'):
+def read_json_file(file_path='Test-Data/combined.json'):
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data['Answers']
@@ -33,13 +33,35 @@ json_data = read_json_file()
 text1_distances = []
 text2_distances = []
 
-# previous_word = None
-# for word in range(len(wordList) -1):
-#     current_word = wordList[word +1]
-#     if previous_word is not None:
-#         vector_distance = calculate_distances_for_text(comparison['answer'], model)
-#         print(f"Vector distance between '{current_word}' and '{previous_word}': {vector_distance}")
-#     previous_word = current_word
+def get_word_embedding(token, model):
+    try:
+        embedding = model[token]
+        return embedding
+    except KeyError:
+        # If the token is not found in the model's vocabulary, return None or a random vector
+        return None
+
+previous_word = None
+for answer in json_data:
+    if answer['creator'] == 'human':
+        answer_text = answer['answer']
+        tokens = answer_text.split()  # Tokenize the answer text
+        for token in tokens:
+            word_embedding = get_word_embedding(token, model)
+            if word_embedding is not None:
+                # Perform your comparison or other operations here
+                current_word = token
+                if previous_word != current_word:
+                    #Do something with the word embedding or token
+                    
+                    #print(current_word, word_embedding)
+                previous_word = current_word
+    elif answer['creator'] != 'human':
+        # Handle non-human answers if needed
+        continue
+    
+
+
 
 for comparison in json_data:
     avg_dist1 = calculate_distances_for_text(comparison['prompt'], model)
