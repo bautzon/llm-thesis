@@ -2,11 +2,14 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from gensim.models import KeyedVectors
-from scipy.spatial import distance
+from scipy.spatial import distance  # Import the module
+from scipy.spatial.distance import cosine  # Import the cosine function directly
+
 
 # Load the Word2Vec model
 #Todo! Add URL to source
-model_path = 'GoogleNews-vectors-negative300.bin' 
+#model_path = 'models/GoogleNews-vectors-negative300.bin' 
+model_path = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
 # Read JSON file
@@ -28,10 +31,53 @@ def calculate_distances_for_text(text, model):
     # print(word_pairs)
     return None
 
-# Process the data
+def cosine_similarity(vector1, vector2):
+    cos_dist = cosine(vector1, vector2)
+    cos_similarity = 1 - cos_dist
+    return cos_similarity 
+
+def calculate_pairwise_cosine_similarities(words, model):
+    similarities = []
+    vectors = [model[word] for word in words if word in model]
+    
+    for i in range(len(vectors)):
+        for j in range(i + 1, len(vectors)):
+            sim = cosine_similarity(vectors[i], vectors[j])
+            similarities.append(sim)
+    
+    return similarities
+
+def calculate_variance_of_cosine_similarities(text, model):
+    words = text.split()
+    similarities = calculate_pairwise_cosine_similarities(words, model)
+    
+    if similarities:  # Check if there are similarities computed
+        variance = np.var(similarities)
+        return variance
+    else:
+        return None
+
+
+
+# * Process the data
 json_data = read_json_file()
-text1_distances = []
-text2_distances = []
+
+# * Initialize Empty Lists
+hum_smoo_avg_list =          []
+syn_smoo_avg_list =          []
+human_vector_list =          []
+human_avg_len_list =         []
+synthetic_vector_list =      []
+synth_avg_len_list =         []
+human_cosine_list =          []
+synthetic_cosine_list =      []
+human_distances =            []
+synthetic_distances =        []
+human_dist_variances =       []
+synthetic_dist_variances =   []
+human_cosine_variances =     []
+synthetic_cosine_variances=  []
+
 
 def get_word_embedding(token, model):
     try:
@@ -48,17 +94,22 @@ def calculate_distance(current_word, previous_word):
         return None
 
 def calculate_vector_norms(words, model):
-    """Calculate norms of word embeddings present in the model."""
     norms = [np.linalg.norm(model[word]) for word in words if word in model]
     return norms
 
+def smoothing_average(values, window_size):
+    result = []
+    moving_sum = sum(values[:window_size])
+    result.append(moving_sum/window_size)
+    for i in range(len(values)- window_size):
+        moving_sum+= (values[i + window_size] - values[i])
+        result.append(moving_sum/window_size)
+        
+    weights = np.repeat(1.0, window_size) / window_size
+    #sma = np.convolve(values , weights, 'valid')
+    return result
 
-    
 
-human_vector_list = []
-human_avg_len_list = []
-synthetic_vector_list = []
-synth_avg_len_list = []
 
 previous_word = None
 for answer in json_data:
@@ -77,10 +128,12 @@ for answer in json_data:
                     #Do something with the word embedding or token
                     vector_distance = calculate_distance(current_word, previous_word)
                     human_vector_list.append(vector_distance)
-            
-                    #print(vector_distance)
-                    #print(current_word, word_embedding)
+                    if previous_word in model and current_word in model:
+                        sim = cosine_similarity(model[previous_word], model[current_word])
+                        human_cosine_list.append(sim) 
+                        human_variance = np.var(human_cosine_list)   
                 previous_word = current_word
+        human_cosine_variances.append(human_variance)
     if answer['creator'] == 'ai':
         answer_text = answer['answer']
         words = answer_text.split()
@@ -95,63 +148,83 @@ for answer in json_data:
                 if previous_word != current_word:
                     #Do something with the word embedding or token
                     vector_distance = calculate_distance(current_word, previous_word)
-                    synthetic_vector_list.append(vector_distance)
-                    #print(vector_distance)
-                    #print(current_word, word_embedding)
+                    synthetic_vector_list.append(vector_distance)   
+                    if previous_word in model and current_word in model:
+                        sim = cosine_similarity(model[previous_word], model[current_word])
+                        synthetic_cosine_list.append(sim)
+                        synthetic_cos_variance = np.var(synthetic_cosine_list)
                 previous_word = current_word
+        synthetic_cosine_variances.append(synthetic_cos_variance)
+        
+            
 
-
-
-
-for comparison in json_data:
-    avg_dist1 = calculate_distances_for_text(comparison['prompt'], model)
-    avg_dist2 = calculate_distances_for_text(comparison['answer'], model)
-    if avg_dist1 is not None:
-        text1_distances.append(avg_dist1)
-    if avg_dist2 is not None:
-        text2_distances.append(avg_dist2)
+# * Should probably be introduced in the for-loop above
+for answer in json_data:
+    if answer['creator'] == 'human':
+        dist = calculate_distances_for_text(answer['answer'], model)
+        if dist is not None:
+            human_distances.append(dist)
+    elif answer['creator'] == 'ai':
+        dist = calculate_distances_for_text(answer['answer'], model)
+        if dist is not None:
+            synthetic_distances.append(dist)
+            
 
 # Calculate derivatives of the distance arrays
-text1_derivatives = np.gradient(text1_distances)
-text2_derivatives = np.gradient(text2_distances)
+human_derivatives = np.gradient(human_distances)
+synthetic_derivatives = np.gradient(synthetic_distances)
+
+hum_smoo_avg_list = smoothing_average(human_avg_len_list, 10)
+syn_smoo_avg_list = smoothing_average(synth_avg_len_list,10)
 
 
-
-# Plotting the original distance data
-plt.figure(figsize=(18, 6))
-plt.subplot(1, 3, 1)
-plt.plot(text1_distances, label='Text 1 Distances', marker='o', color='b')
-plt.plot(text2_distances, label='Text 2 Distances', marker='x', color='r')
+# * Plotting the original distance data
+plt.figure(figsize=(24, 6))
+plt.subplot(1, 4, 1)
+plt.plot(human_distances, label='human Distances', color='b')
+plt.plot(synthetic_distances, label='synthetic Distances', color='r')
+plt.plot(smoothing_average(human_distances,5), label='Human - Smoothed Average', linestyle='--', color='black')
+plt.plot(smoothing_average(synthetic_distances, 5), label='Synthetic - Smoothed Average', color='black')
 plt.title('Average Euclidean Distances for Word Pairs')
 plt.xlabel('Number of Answers')
 plt.ylabel('Average Distance')
 plt.legend()
 plt.grid(True)
 
-# Plotting the derivatives of the distances
-plt.subplot(1, 3, 2)
-plt.plot(text1_derivatives, label='Derivative of Text 1 Distances', marker='o', linestyle='--', color='b')
-plt.plot(text2_derivatives, label='Derivative of Text 2 Distances', marker='x', linestyle='--', color='r')
-plt.title('Derivatives of Distances')
+# *  Plotting the Cosines of the Embedded Tokens
+plt.subplot(1, 4, 2)
+#plt.plot(human_derivatives, label='Derivative of Text 1 Distances', color='b')
+#plt.plot(synthetic_derivatives, label='Derivative of Text 2 Distances', color='r')
+plt.plot(smoothing_average(human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
+plt.plot(smoothing_average(synthetic_cosine_list, 2000), label='Synthetic Cosine Similarities', color='r')
+plt.title('Smothed Average of Cosine Similarity Scores')
 plt.xlabel('Number of Tokens')
-plt.ylabel('Rate of Change in Distance')
+plt.ylabel('Cosine Similarity')
 plt.legend()
 plt.grid(True)
-# print(text2_derivatives)
-# print("READTHIIISSSS")
-# print(human_vector_list)
-# print(synthetic_vector_list)
 
-# Plotting the vector distances
-plt.subplot(1, 3, 3)
-plt.plot(human_avg_len_list, label='Human', linestyle='--', color='b')
-plt.plot(synth_avg_len_list, label='Synthetic', linestyle='--', color='r')
+
+# *  Plotting the Variances
+plt.subplot(1, 4, 3)
+plt.plot(smoothing_average(human_cosine_variances, 1), label='Human Cosine Similarities', color='b')
+plt.plot(smoothing_average(synthetic_cosine_variances, 1), label='Synthetic Cosine Similarities', color='r')
+plt.title('Variance')
+plt.xlabel('Number of Answers')
+plt.ylabel('Average Squared difference between record and mean')
+plt.legend()
+plt.grid(True)
+
+# * Plotting the vector distances
+plt.subplot(1, 4, 4)
+plt.plot(human_avg_len_list, label='Human', color='b')
+plt.plot(synth_avg_len_list, label='Synthetic', color='r')
+plt.plot(hum_smoo_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
+plt.plot(syn_smoo_avg_list, label='Synthetic - Smoothed Average', color='black')
 plt.title('Word Embedding Vector Distances')
 plt.xlabel('Word Index')
 plt.ylabel('Vector Distance')
 plt.legend()
 plt.grid(True)
-
 
 plt.tight_layout()
 
