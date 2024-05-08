@@ -25,7 +25,7 @@ def calculate_distances_for_text(text, model):
                  for word1, word2 in word_pairs if word1 in model and word2 in model]
     if distances:
         return np.mean(distances)
-    print(word_pairs)
+    # print(word_pairs)
     return None
 
 # Process the data
@@ -40,26 +40,66 @@ def get_word_embedding(token, model):
     except KeyError:
         # If the token is not found in the model's vocabulary, return None or a random vector
         return None
+    
+def calculate_distance(current_word, previous_word):
+    if previous_word in model and current_word in model:
+        return distance.euclidean(model[previous_word], model[current_word])
+    else:
+        return None
+
+def calculate_vector_norms(words, model):
+    """Calculate norms of word embeddings present in the model."""
+    norms = [np.linalg.norm(model[word]) for word in words if word in model]
+    return norms
+
+
+    
+
+human_vector_list = []
+human_avg_len_list = []
+synthetic_vector_list = []
+synth_avg_len_list = []
 
 previous_word = None
 for answer in json_data:
     if answer['creator'] == 'human':
         answer_text = answer['answer']
-        tokens = answer_text.split()  # Tokenize the answer text
-        for token in tokens:
-            word_embedding = get_word_embedding(token, model)
+        words = answer_text.split()
+        vector_norms = calculate_vector_norms(words, model)
+        if vector_norms:
+            average_norm = np.mean(vector_norms)
+            human_avg_len_list.append(average_norm)
+        for word in words:
+            word_embedding = get_word_embedding(word, model)
             if word_embedding is not None:
-                # Perform your comparison or other operations here
-                current_word = token
+                current_word = word
                 if previous_word != current_word:
                     #Do something with the word embedding or token
-                    
+                    vector_distance = calculate_distance(current_word, previous_word)
+                    human_vector_list.append(vector_distance)
+            
+                    #print(vector_distance)
                     #print(current_word, word_embedding)
                 previous_word = current_word
-    elif answer['creator'] != 'human':
-        # Handle non-human answers if needed
-        continue
-    
+    if answer['creator'] == 'ai':
+        answer_text = answer['answer']
+        words = answer_text.split()
+        vector_norms = calculate_vector_norms(words, model)
+        if vector_norms:
+            average_norm = np.mean(vector_norms)
+            synth_avg_len_list.append(average_norm)
+        for word in words:
+            word_embedding = get_word_embedding(word, model)
+            if word_embedding is not None:
+                current_word = word
+                if previous_word != current_word:
+                    #Do something with the word embedding or token
+                    vector_distance = calculate_distance(current_word, previous_word)
+                    synthetic_vector_list.append(vector_distance)
+                    #print(vector_distance)
+                    #print(current_word, word_embedding)
+                previous_word = current_word
+
 
 
 
@@ -75,9 +115,11 @@ for comparison in json_data:
 text1_derivatives = np.gradient(text1_distances)
 text2_derivatives = np.gradient(text2_distances)
 
+
+
 # Plotting the original distance data
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
+plt.figure(figsize=(18, 6))
+plt.subplot(1, 3, 1)
 plt.plot(text1_distances, label='Text 1 Distances', marker='o', color='b')
 plt.plot(text2_distances, label='Text 2 Distances', marker='x', color='r')
 plt.title('Average Euclidean Distances for Word Pairs')
@@ -87,7 +129,7 @@ plt.legend()
 plt.grid(True)
 
 # Plotting the derivatives of the distances
-plt.subplot(1, 2, 2)
+plt.subplot(1, 3, 2)
 plt.plot(text1_derivatives, label='Derivative of Text 1 Distances', marker='o', linestyle='--', color='b')
 plt.plot(text2_derivatives, label='Derivative of Text 2 Distances', marker='x', linestyle='--', color='r')
 plt.title('Derivatives of Distances')
@@ -95,6 +137,22 @@ plt.xlabel('Number of Tokens')
 plt.ylabel('Rate of Change in Distance')
 plt.legend()
 plt.grid(True)
+# print(text2_derivatives)
+# print("READTHIIISSSS")
+# print(human_vector_list)
+# print(synthetic_vector_list)
+
+# Plotting the vector distances
+plt.subplot(1, 3, 3)
+plt.plot(human_avg_len_list, label='Human', linestyle='--', color='b')
+plt.plot(synth_avg_len_list, label='Synthetic', linestyle='--', color='r')
+plt.title('Word Embedding Vector Distances')
+plt.xlabel('Word Index')
+plt.ylabel('Vector Distance')
+plt.legend()
+plt.grid(True)
+
 
 plt.tight_layout()
+
 plt.show()
