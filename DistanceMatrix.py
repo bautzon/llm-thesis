@@ -109,9 +109,42 @@ def smoothing_average(values, window_size):
     #sma = np.convolve(values , weights, 'valid')
     return result
 
+def calculate_distance_and_more(creator):
+    avg_len_list = []
+    vector_list = []
+    cosine_list = []
+    variance_list = []
+    cosine_variance_list = []
+    previous_word = None
+    for answer in json_data:
+        if answer['creator'] == creator:
+            answer_text = answer['answer']
+            words = answer_text.split()
+            vector_norms = calculate_vector_norms(words, model)
+            if vector_norms:
+                average_norm = np.mean(vector_norms)
+                avg_len_list.append(average_norm)
+            for word in words:
+                word_embedding = get_word_embedding(word, model)
+                if word_embedding is not None:
+                    current_word = word
+                    if previous_word != current_word:
+                        #Do something with the word embedding or token
+                        vector_distance = calculate_distance(current_word, previous_word)
+                        vector_list.append(vector_distance)
+                        if previous_word in model and current_word in model:
+                            sim = cosine_similarity(model[previous_word], model[current_word])
+                            cosine_list.append(sim) 
+                            variance = np.var(cosine_list)   
+                    previous_word = current_word
+            cosine_variance_list.append(variance)
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list
 
+# * Calculate the distances and more
+human_avg_len_list, human_vector_list, human_cosine_list, human_cosine_variances = calculate_distance_and_more('human')
+synth_avg_len_list, synthetic_vector_list, synthetic_cosine_list, synthetic_cosine_variances = calculate_distance_and_more('ai')
 
-previous_word = None
+""" previous_word = None
 for answer in json_data:
     if answer['creator'] == 'human':
         answer_text = answer['answer']
@@ -155,7 +188,7 @@ for answer in json_data:
                         synthetic_cos_variance = np.var(synthetic_cosine_list)
                 previous_word = current_word
         synthetic_cosine_variances.append(synthetic_cos_variance)
-        
+ """        
             
 
 # * Should probably be introduced in the for-loop above
