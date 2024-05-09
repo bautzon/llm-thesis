@@ -60,7 +60,11 @@ def calculate_variance_of_cosine_similarities(text, model):
 
 
 # * Process the data
-json_data = read_json_file()
+llama3_prompt1_json_data = read_json_file()
+llama3_prompt2_json_data = read_json_file('Test-Data/prompt_2_ai_output.json')
+prompt_2_human_answers_json_data = read_json_file('Test-Data/prompt_2_human_output.json')
+chatGpt3_prompt1_json_data = read_json_file('Test-Data/output_chatGpt_prompt1_Student.json')
+chatGpt3_prompt2_json_data = read_json_file('Test-Data/output_chatGpt_prompt2_Student.json')
 
 # * Initialize Empty Lists
 hum_smoo_avg_list =          []
@@ -109,16 +113,20 @@ def smoothing_average(values, window_size):
     #sma = np.convolve(values , weights, 'valid')
     return result
 
-def calculate_distance_and_more(creator):
+def calculate_distance_and_more(creator, json_data):
     avg_len_list = []
     vector_list = []
     cosine_list = []
     variance_list = []
     cosine_variance_list = []
+    distances = []
     previous_word = None
     for answer in json_data:
         if answer['creator'] == creator:
             answer_text = answer['answer']
+            dist = calculate_distances_for_text(answer_text, model)
+            if dist is not None:
+                distances.append(dist)
             words = answer_text.split()
             vector_norms = calculate_vector_norms(words, model)
             if vector_norms:
@@ -138,11 +146,12 @@ def calculate_distance_and_more(creator):
                             variance = np.var(cosine_list)   
                     previous_word = current_word
             cosine_variance_list.append(variance)
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances
 
 # * Calculate the distances and more
-human_avg_len_list, human_vector_list, human_cosine_list, human_cosine_variances = calculate_distance_and_more('human')
-synth_avg_len_list, synthetic_vector_list, synthetic_cosine_list, synthetic_cosine_variances = calculate_distance_and_more('ai')
+human_avg_len_list, human_vector_list, human_cosine_list, human_cosine_variances, human_distances = calculate_distance_and_more('human', llama3_prompt1_json_data)
+synth_avg_len_list, synthetic_vector_list, synthetic_cosine_list, synthetic_cosine_variances, synthetic_distances = calculate_distance_and_more('ai', llama3_prompt1_json_data)
+gpt_prompt1_avg_len_list, gpt_prompt1_vector_list, gpt_prompt1_cosine_list, gpt_prompt1_cosine_variances, gpt_prompt1_distances = calculate_distance_and_more('ai', chatGpt3_prompt1_json_data)
 
 """ previous_word = None
 for answer in json_data:
@@ -191,8 +200,8 @@ for answer in json_data:
  """        
             
 
-# * Should probably be introduced in the for-loop above
-for answer in json_data:
+""" # * Should probably be introduced in the for-loop above
+for answer in llama3_prompt1_json_data:
     if answer['creator'] == 'human':
         dist = calculate_distances_for_text(answer['answer'], model)
         if dist is not None:
@@ -200,7 +209,7 @@ for answer in json_data:
     elif answer['creator'] == 'ai':
         dist = calculate_distances_for_text(answer['answer'], model)
         if dist is not None:
-            synthetic_distances.append(dist)
+            synthetic_distances.append(dist) """
             
 
 # Calculate derivatives of the distance arrays
@@ -216,6 +225,8 @@ plt.figure(figsize=(24, 6))
 plt.subplot(1, 4, 1)
 plt.plot(human_distances, label='human Distances', color='b')
 plt.plot(synthetic_distances, label='synthetic Distances', color='r')
+# Plot for GPT3 Prompt 1... that fucks up the results!
+# plt.plot(gpt_prompt1_distances, label='GPT3 Prompt 1 Distances', color='g')
 plt.plot(smoothing_average(human_distances,5), label='Human - Smoothed Average', linestyle='--', color='black')
 plt.plot(smoothing_average(synthetic_distances, 5), label='Synthetic - Smoothed Average', color='black')
 plt.title('Average Euclidean Distances for Word Pairs')
