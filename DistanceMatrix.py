@@ -204,7 +204,7 @@ ai_indices = list(range(1, len(synthetic_dist_variances) + 1))
 def moving_average(data, window_size):
     """Calculate the moving average using a window of the specified size."""
     window = np.ones(int(window_size)) / float(window_size)
-    return np.convolve(data, window, 'valid')
+    return np.convolve(data, window, 'lort')
 
 plt.figure(figsize=(10, 5))
 plt.plot(moving_average(human_dist_variances,5), label='Human-generated', marker='o')
