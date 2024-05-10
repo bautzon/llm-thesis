@@ -144,10 +144,19 @@ prompt2_gpt3_avg_len_list, prompt2_gpt3_vector_list, prompt2_gpt3_cosine_list, p
 # Calculate derivatives of the distance arrays
 prompt1_human_derivatives = np.gradient(prompt1_human_distances)
 prompt1_llama3_derivatives = np.gradient(prompt1_llama3_distances)
+prompt1_gpt3_derivatives = np.gradient(prompt1_gpt3_distances)
+
+prompt2_human_derivatives = np.gradient(prompt2_human_distances)
+prompt2_llama3_derivatives = np.gradient(prompt2_llama3_distances)
+prompt2_gpt3_derivatives = np.gradient(prompt2_gpt3_distances)
 
 prompt1_human_smoo_avg_list = smoothing_average(promp1_human_avg_len_list, 10)
 prompt1_llama3_smoo_avg_list = smoothing_average(prompt1_llama3_avg_len_list,10)
+prompt1_gpt3_smoo_avg_list = smoothing_average(prompt1_gpt3_avg_len_list,10)
 
+prompt2_human_smoo_avg_list = smoothing_average(prompt2_human_avg_len_list, 10)
+prompt2_llama3_smoo_avg_list = smoothing_average(prompt2_llama3_avg_len_list,10)
+prompt2_gpt3_smoo_avg_list = smoothing_average(prompt2_gpt3_avg_len_list,10)
 
 # * Plotting the original distance data
 plt.figure(figsize=(20, 8))
@@ -169,17 +178,18 @@ plt.subplot(2, 4, 2)
 #plt.plot(synthetic_derivatives, label='Derivative of Text 2 Distances', color='r')
 plt.plot(smoothing_average(prompt1_human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
 plt.plot(smoothing_average(prompt1_llama3_cosine_list, 2000), label='Llama3 Cosine Similarities', color='r')
+plt.plot(smoothing_average(prompt1_gpt3_cosine_list, 2000), label='GPT3 Cosine Similarities', color='g')
 plt.title('Smothed Average of Cosine Similarity Scores')
 plt.xlabel('Number of Tokens')
 plt.ylabel('Cosine Similarity')
 plt.legend()
 plt.grid(True)
 
-
 # *  Plotting the Variances
 plt.subplot(2, 4, 3)
 plt.plot(smoothing_average(prompt1_human_cosine_variances, 1), label='Human Cosine Similarities', color='b')
 plt.plot(smoothing_average(prompt1_llama3_cosine_variances, 1), label='Llama3 Cosine Similarities', color='r')
+plt.plot(smoothing_average(prompt1_gpt3_cosine_variances, 1), label='GPT3 Cosine Similarities', color='g')
 plt.title('Variance')
 plt.xlabel('Number of Answers')
 plt.ylabel('Avg. Squared difference between record and mean')
@@ -190,8 +200,10 @@ plt.grid(True)
 plt.subplot(2, 4, 4)
 plt.plot(promp1_human_avg_len_list, label='Human', color='b')
 plt.plot(prompt1_llama3_avg_len_list, label='Llama3', color='r')
+plt.plot(prompt1_gpt3_avg_len_list, label='GPT3', color='g')
 plt.plot(prompt1_human_smoo_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
 plt.plot(prompt1_llama3_smoo_avg_list, label='Llama3 - Smoothed Average', color='black')
+plt.plot(prompt1_gpt3_smoo_avg_list, label='GPT3 - Smoothed Average', color='black')
 plt.title('Word Embedding Vector Distances')
 plt.xlabel('Word Index')
 plt.ylabel('Vector Distance')
@@ -209,7 +221,39 @@ plt.ylabel('Average Distance')
 plt.legend()
 plt.grid(True)
 
-plt.tight_layout()
+plt.subplot(2, 4, 6)
+plt.plot(smoothing_average(prompt2_human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
+plt.plot(smoothing_average(prompt2_llama3_cosine_list, 2000), label='Llama3 Cosine Similarities', color='r')
+plt.plot(smoothing_average(prompt2_gpt3_cosine_list, 2000), label='GPT3 Cosine Similarities', color='g')
+plt.title('Smothed Average of Cosine Similarity Scores')
+plt.xlabel('Number of Tokens')
+plt.ylabel('Cosine Similarity')
+plt.legend()
+plt.grid(True)
 
+# *  Plotting the Cosines of the Embedded Tokens
+plt.subplot(2, 4, 7)
+plt.plot(smoothing_average(prompt2_human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
+plt.plot(smoothing_average(prompt2_llama3_cosine_list, 2000), label='Llama3 Cosine Similarities', color='r')
+plt.plot(smoothing_average(prompt2_gpt3_cosine_list, 2000), label='GPT3 Cosine Similarities', color='g')
+plt.title('Smothed Average of Cosine Similarity Scores')
+plt.xlabel('Number of Tokens')
+plt.ylabel('Cosine Similarity')
+plt.legend()
+plt.grid(True)
+
+# *  Plotting the Variances
+plt.subplot(2, 4, 8)
+plt.plot(smoothing_average(prompt2_human_cosine_variances, 1), label='Human Cosine Similarities', color='b')
+plt.plot(smoothing_average(prompt2_llama3_cosine_variances, 1), label='Llama3 Cosine Similarities', color='r')
+plt.plot(smoothing_average(prompt2_gpt3_cosine_variances, 1), label='GPT3 Cosine Similarities', color='g')
+plt.title('Variance')
+plt.xlabel('Number of Answers')
+plt.ylabel('Avg. Squared difference between record and mean')
+plt.legend()
+plt.grid(True)
+
+
+plt.tight_layout()
 plt.show()
 
