@@ -68,18 +68,19 @@ chatGpt3_prompt2_json_data = read_json_file('Test-Data/output_chatGpt_prompt2_St
 
 # * Initialize Empty Lists
 hum_smoo_avg_list =          []
-syn_smoo_avg_list =          []
 human_vector_list =          []
 human_avg_len_list =         []
+human_cosine_list =          []
+human_distances =            []
+human_dist_variances =       []
+human_cosine_variances =     []
+
+syn_smoo_avg_list =          []
 synthetic_vector_list =      []
 synth_avg_len_list =         []
-human_cosine_list =          []
 synthetic_cosine_list =      []
-human_distances =            []
 synthetic_distances =        []
-human_dist_variances =       []
 synthetic_dist_variances =   []
-human_cosine_variances =     []
 synthetic_cosine_variances=  []
 
 
@@ -226,7 +227,7 @@ plt.subplot(1, 4, 1)
 plt.plot(human_distances, label='human Distances', color='b')
 plt.plot(synthetic_distances, label='synthetic Distances', color='r')
 # Plot for GPT3 Prompt 1... that fucks up the results!
-# plt.plot(gpt_prompt1_distances, label='GPT3 Prompt 1 Distances', color='g')
+plt.plot(gpt_prompt1_distances, label='GPT3 Prompt 1 Distances', color='g')
 plt.plot(smoothing_average(human_distances,5), label='Human - Smoothed Average', linestyle='--', color='black')
 plt.plot(smoothing_average(synthetic_distances, 5), label='Synthetic - Smoothed Average', color='black')
 plt.title('Average Euclidean Distances for Word Pairs')
