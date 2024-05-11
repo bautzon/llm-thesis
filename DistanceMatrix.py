@@ -6,6 +6,10 @@ from scipy.spatial import distance  # Import the module
 from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 class CalculationsObject:
+    """
+    Class to store the calculated data for each model
+    Contains all the data calculated for a model
+    """
     def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances):
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
@@ -86,7 +90,6 @@ def calculate_variance_of_cosine_similarities(text, model):
     else:
         return None
 
-def plot_data(subplot, data, labels, colors, title, x_label, y_label):
     plt.subplot(2, 4, subplot)
     for i in range(len(data)):
         plt.plot(data[i], label=labels[i], color=colors[i])
@@ -162,8 +165,11 @@ def calculate_distance_and_more(creator, json_data):
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances
 
 def create_prompt1_plots():
+    """
+    Creates the plots for the data of prompt 1
+    """
     # * Plotting the original distance data
-    plt.figure(figsize=(20, 8))
+    plt.figure(1, figsize=(20, 8))
     plt.subplot(2, 2, 1)
     plt.plot(prompt1_human.distances, label='Human', color='b')
     # plt.plot(prompt1_llama2_student.distances, label='Llama2 Student', color='black')
@@ -236,10 +242,12 @@ def create_prompt1_plots():
     plt.grid(True)
 
     plt.tight_layout()
-    plt.show()
     
 def create_prompt2_plots():
-    plt.figure(figsize=(20, 8))
+    """
+    Creates the plots for the data of prompt 2
+    """
+    plt.figure(2, figsize=(20, 8))
     plt.subplot(2, 2, 1)
     plt.plot(prompt2_human.distances, label='Human', color='b')
     # plt.plot(prompt2_llama2_student.distances, label='Llama2 Student', color='black')
@@ -307,47 +315,121 @@ def create_prompt2_plots():
     plt.grid(True)
 
     plt.tight_layout()
-    plt.show()
     
+def read_prompt1_data():
+    """
+    Reads the JSON files containing the answers for prompt 2
+    Assigns the data to global variables accessible from the entire script
+    """
+    global llama3_prompt1_json_data
+    llama3_prompt1_json_data = read_json_file('Test-Data/combined.json')
+    
+    global prompt1_llama2_student_json_data
+    prompt1_llama2_student_json_data = read_json_file('Test-Data/prompt1_llama2_student.json')
+    
+    global prompt1_chatGpt3_student_json_data
+    prompt1_chatGpt3_student_json_data = read_json_file('Test-Data/output_chatGpt_prompt1_Student.json')
+    
+    global prompt1_chatGpt3_plain_json_data
+    prompt1_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt1_gpt3_plain.json')
+    
+    global prompt1_chatGpt3_humanlike_json_data
+    prompt1_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt1_gpt3_humanlike.json')
+    
+    global prompt1_chatGpt4_student_json_data
+    prompt1_chatGpt4_student_json_data = read_json_file('Test-Data/prompt1_gpt4_student.json')
+
+def read_prompt2_data():
+    """
+    Reads the JSON files containing the answers for prompt 2
+    Assigns the data to global variables accessible from the entire script
+    """
+    global prompt_2_human_answers_json_data
+    prompt_2_human_answers_json_data = read_json_file('Test-Data/prompt_2_human_output.json')
+
+    global prompt2_llama3_json_data
+    prompt2_llama3_json_data = read_json_file('Test-Data/prompt_2_ai_output.json')
+
+    global prompt2_llama2_student_json_data
+    prompt2_llama2_student_json_data = read_json_file('Test-Data/prompt2_llama2_student.json')
+
+    global prompt2_chatGpt3_json_data
+    prompt2_chatGpt3_json_data = read_json_file('Test-Data/output_chatGpt_prompt2_Student.json')
+
+    global prompt2_chatGpt3_plain_json_data
+    prompt2_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt2_gpt3_plain.json')
+
+    global prompt2_chatGpt3_humanlike_json_data
+    prompt2_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt2_gpt3_humanlike.json')
+
+    global prompt2_chatGpt4_student_json_data
+    prompt2_chatGpt4_student_json_data = read_json_file('Test-Data/prompt2_gpt4_student.json')
+
+def calculate_prompt1():
+    """
+    Creates the objects containing the calculated data for prompt 1
+    It assigns the objects to global variables accessible from the entire script
+    """
+    global prompt1_human
+    prompt1_human = CalculationsObject(*calculate_distance_and_more('human', llama3_prompt1_json_data))
+    
+    global prompt1_llama3_student
+    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
+    
+    #global prompt1_llama2_student
+    #prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt1_llama2_student_json_data))
+    
+    global prompt1_gpt3_student
+    prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
+    
+    global prompt1_gpt3_plain
+    prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
+    
+    global prompt1_gpt3_humanlike
+    prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
+    
+    global prompt1_gpt4_student
+    prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
+
+def calculate_prompt2():
+    """
+    Creates the objects containing the calculated data for prompt 2
+    It assigns the objects to global variables accessible from the entire script
+    """
+    global prompt2_human
+    prompt2_human = CalculationsObject(*calculate_distance_and_more('human', prompt_2_human_answers_json_data))
+    
+    # globalprompt2_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt2_llama2_student_json_data))
+    
+    global prompt2_llama3_student
+    prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
+    
+    global prompt2_gpt3_student
+    prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
+    
+    global prompt2_gpt3_plain
+    prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
+    
+    global prompt2_gpt4_student
+    prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
+
+
 # Load the Word2Vec model
 #Todo! Add URL to source
 #model_path = 'models/GoogleNews-vectors-negative300.bin' 
 model_path = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
-# * Read the data
-llama3_prompt1_json_data = read_json_file('Test-Data/combined.json')
-prompt1_llama2_student_json_data = read_json_file('Test-Data/prompt1_llama2_student.json')
-prompt1_chatGpt3_student_json_data = read_json_file('Test-Data/output_chatGpt_prompt1_Student.json')
-prompt1_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt1_gpt3_plain.json')
-prompt1_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt1_gpt3_humanlike.json')
-prompt1_chatGpt4_student_json_data = read_json_file('Test-Data/prompt1_gpt4_student.json')
+# To read, calculate and show prompt 1 data uncomment the following lines
+read_prompt1_data()
+calculate_prompt1()
+create_prompt1_plots()
 
-prompt_2_human_answers_json_data = read_json_file('Test-Data/prompt_2_human_output.json')
-prompt2_llama3_json_data = read_json_file('Test-Data/prompt_2_ai_output.json')
-prompt2_llama2_student_json_data = read_json_file('Test-Data/prompt2_llama2_student.json')
-prompt2_chatGpt3_json_data = read_json_file('Test-Data/output_chatGpt_prompt2_Student.json')
-prompt2_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt2_gpt3_plain.json')
-prompt2_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt2_gpt3_humanlike.json')
-prompt2_chatGpt4_student_json_data = read_json_file('Test-Data/prompt2_gpt4_student.json')
+# To read, calculate and show prompt 2 data uncomment the following lines
+read_prompt2_data()
+calculate_prompt2()
+create_prompt2_plots()
 
-# * Calculations for prompt 1
-prompt1_human = CalculationsObject(*calculate_distance_and_more('human', llama3_prompt1_json_data))
-prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
-# prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt1_llama2_student_json_data))
-prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
-prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
-prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
-prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
+plt.show() # Needed in the end to show the plots
 
-# * Calculations for prompt 2
-prompt2_human = CalculationsObject(*calculate_distance_and_more('human', prompt_2_human_answers_json_data))
-# prompt2_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt2_llama2_student_json_data))
-prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
-prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
-prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
-prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
-
-# create_prompt1_plots()
-# create_prompt2_plots()
-# create_large_distance_plot()
+#create_large_distance_plot()
