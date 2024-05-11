@@ -14,7 +14,7 @@ const prompt_2_student = "I am an American high school student that received the
 async function generate() {
   const completion = await openai.chat.completions.create({
     messages: [{ role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: prompt_1_student}
+        { role: "user", content: prompt_2_student}
     ],
     model: "gpt-4",
   });
@@ -30,7 +30,7 @@ async function main() {
             answers.Answers.push({
                 id: i+1,
                 creator: "ai",
-                prompt: prompt_1_student,
+                prompt: prompt_2_student,
                 answer: res.choices[0].message.content.replace(/\n/g, " ")
             });
             fs.writeFileSync("prompt1_gpt4_student.json", JSON.stringify(answers, null, 4));

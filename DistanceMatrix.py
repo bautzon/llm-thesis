@@ -5,16 +5,26 @@ from gensim.models import KeyedVectors
 from scipy.spatial import distance  # Import the module
 from scipy.spatial.distance import cosine  # Import the cosine function directly
 
+class CalculationsObject:
+    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances):
+        self.avg_len_list = avg_len_list
+        self.vector_list = vector_list
+        self.cosine_list = cosine_list
+        self.cosine_variance_list = cosine_variance_list
+        self.distances = distances
+        self.derivatives = np.gradient(distances)
+        self.smooth_avg_list = smoothing_average(avg_len_list, 10)
+
 def create_large_distance_plot():
-    plt.figure(figsize=(24, 10))
+    plt.figure(figsize=(20, 8))
     plt.subplot(1, 1, 1)
-    plt.plot(smoothing_average(prompt1_human_distances, 5), label='Human', color='b')
-    plt.plot(smoothing_average(prompt1_llama2_distances, 5), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt1_llama3_distances, 5), label='Llama3 Student', color='r')
-    plt.plot(smoothing_average(prompt1_gpt3_student_distances, 5), label='GPT3 Student', color='g')
-    plt.plot(smoothing_average(prompt1_gpt3_plain_distances, 5), label='GPT3 Plain', color='y')
-    plt.plot(smoothing_average(prompt1_gpt3_humanlike_distances, 5), label='GPT3 Humanlike', color='purple')
-    plt.plot(smoothing_average(prompt1_gpt4_student_distances, 5), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt1_human.distances, 5), label='Human', color='b')
+    #plt.plot(smoothing_average(prompt1_llama2.distances, 5), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.distances, 5), label='Llama3 Student', color='r')
+    plt.plot(smoothing_average(prompt1_gpt3_student.distances, 5), label='GPT3 Student', color='g')
+    plt.plot(smoothing_average(prompt1_gpt3_plain.distances, 5), label='GPT3 Plain', color='y')
+    plt.plot(smoothing_average(prompt1_gpt3_humanlike.distances, 5), label='GPT3 Humanlike', color='purple')
+    plt.plot(smoothing_average(prompt1_gpt4_student.distances, 5), label='GPT4 Student', color='orange')
     plt.title('Prompt 1 - Avg Euclidean Distances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
@@ -151,78 +161,154 @@ def calculate_distance_and_more(creator, json_data):
             cosine_variance_list.append(variance)
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances
 
-def create_plots():
+def create_prompt1_plots():
     # * Plotting the original distance data
     plt.figure(figsize=(20, 8))
+    plt.subplot(2, 2, 1)
+    plt.plot(prompt1_human.distances, label='Human', color='b')
+    # plt.plot(prompt1_llama2_student.distances, label='Llama2 Student', color='black')
+    plt.plot(prompt1_llama3_student.distances, label='Llama3 Student', color='r')
+    plt.plot(prompt1_gpt3_humanlike.distances, label='GPT3 Humanlike', color='y')
+    plt.plot(prompt1_gpt3_student.distances, label='GPT3 Student', color='purple')
+    plt.plot(prompt1_gpt3_plain.distances, label='GPT3 Plain', color='black')
+    plt.plot(prompt1_gpt4_student.distances, label='GPT4 Student', color='orange')
+    # plt.plot(smoothing_average(prompt1_human_distances,5), label='Human - Smoothed Average', color='black')
+    # plt.plot(smoothing_average(prompt1_llama3_distances, 5), label='Llama3 - Smoothed Average', color='black')
+    plt.title('Prompt 1 - Avg. Euclidean Distance')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Average Distance')
+    plt.ylim(2.6, 3.2)
+    plt.xlim(0, 100)
+    plt.legend()
+    plt.grid(True)
 
-    plot_data(1, 
-          [prompt1_human_distances, prompt1_llama3_distances, prompt1_gpt3_student_distances, prompt1_gpt3_plain_distances, smoothing_average(prompt1_human_distances,5), smoothing_average(prompt1_llama3_distances, 5)], 
-          ['human', 'Llama3', 'GPT3', 'GPT3 Plain', 'Human - Smoothed Average', 'Llama3 - Smoothed Average'], 
-          ['b', 'r', 'g', 'y', 'black', 'black'], 
-          'Prompt 1 - Avg. Euclidean Distances', 
-          'Number of Answers', 
-          'Average Distance')
+    plt.subplot(2, 2, 2)
+    plt.plot(prompt1_human.derivatives, label='Human', color='b')
+    #plt.plot(prompt1_llama2_student.derivatives, label='Llama2 Student', color='black')
+    plt.plot(prompt1_llama3_student.derivatives, label='Llama3 Student', color='r')
+    plt.plot(prompt1_gpt3_humanlike.derivatives, label='GPT3 Humanlike', color='y')
+    plt.plot(prompt1_gpt3_student.derivatives, label='GPT3 Student', color='purple')
+    plt.plot(prompt1_gpt3_plain.derivatives, label='GPT3 Plain', color='black')
+    plt.plot(prompt1_gpt4_student.derivatives, label='GPT4 Student', color='orange')
+    #plt.plot(smoothing_average(prompt1_human.cosine_list, 2000), label='Human - Smoothed Average', color='black')
+    #plt.plot(smoothing_average(prompt1_llama3_student.cosine_list, 2000), label='Llama3 Student - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt1_gpt3_humanlike.cosine_list, 2000), label='Gpt3 Humanlike - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt1_gpt3_plain.cosine_list, 2000), label='Gpt3 Plain - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt1_gpt4_student.cosine_list, 2000), label='Gpt4 Student - Smoothed Avg', color='black')
+    plt.title('Prompt 1 - Derivatives')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Cosine Similarity')
+    plt.legend()
+    plt.grid(True)
 
-    plot_data(2,
-            [prompt1_human_derivatives, prompt1_llama3_derivatives, prompt1_gpt3_derivatives, smoothing_average(prompt1_human_cosine_list, 2000), smoothing_average(prompt1_llama3_cosine_list, 2000), smoothing_average(prompt1_gpt3_student_cosine_list, 2000)],
-            ['Human', 'Llama3', 'Gpt3', 'Human Cosine Similarities', 'Llama3 Cosine Similarities', 'GPT3 Cosine Similarities'],
-            ['b', 'r', 'g', 'b', 'r', 'g'],
-            'Prompt 1 - Derivatives',
-            'Number of Tokens',
-            'Cosine Similarity')
+    plt.subplot(2, 2, 3)
+    plt.plot(smoothing_average(prompt1_human.cosine_variance_list, 1), label='Human', color='b')
+    # plt.plot(smoothing_average(prompt1_llama2_student.cosine_variance_list, 1), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='r')
+    plt.plot(smoothing_average(prompt1_gpt3_humanlike.cosine_variance_list, 1), label='GPT3 Humanlike', color='y')
+    plt.plot(smoothing_average(prompt1_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='purple')
+    plt.plot(smoothing_average(prompt1_gpt3_plain.cosine_variance_list, 1), label='GPT3 Plain', color='black')
+    plt.plot(smoothing_average(prompt1_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
+    plt.title('Prompt 1 - Variance of Cosine Similarities')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Avg. Squared difference between record and mean')
+    plt.legend()
+    plt.grid(True)
 
-    plot_data(3,
-            [smoothing_average(prompt1_human_cosine_variances, 1), smoothing_average(prompt1_llama3_cosine_variances, 1), smoothing_average(prompt1_gpt3_student_cosine_variances, 1)],
-            ['Human', 'Llama3', 'GPT3'],
-            ['b', 'r', 'g'],
-            'Prompt 1 - Variance of Cosine Similarities',
-            'Number of Answers',
-            'Avg. Squared difference between record and mean')
+    plt.subplot(2, 2, 4)
+    plt.plot(prompt1_human.avg_len_list, label='Human', color='b')
+    # plt.plot(prompt1_llama2_student.avg_len_list, label='Llama2 Student', color='black')
+    plt.plot(prompt1_llama3_student.avg_len_list, label='Llama3 Student', color='r')
+    plt.plot(prompt1_gpt3_humanlike.avg_len_list, label='GPT3 Humanlike', color='y')
+    plt.plot(prompt1_gpt3_student.avg_len_list, label='GPT3 Student', color='purple')
+    plt.plot(prompt1_gpt3_plain.avg_len_list, label='GPT3 Plain', color='black')
+    plt.plot(prompt1_gpt4_student.avg_len_list, label='GPT4 Student', color='orange')
+    #plt.plot(prompt1_human.smooth_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt1_llama3_student.smooth_avg_list, label='Llama3 Student - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt1_gpt3_humanlike.smooth_avg_list, label='GPT3 Humanlike - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt1_gpt3_student.smooth_avg_list, label='GPT3 Student - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt1_gpt3_plain.smooth_avg_list, label='GPT3 Plain - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt1_gpt4_student.smooth_avg_list, label='GPT4 Student - Smoothed Average', linestyle='--', color='black')
+    plt.title('Prompt 1 - Word Embedding Vector Distances')
+    plt.xlabel('Word Index')
+    plt.ylabel('Vector Distance')
+    plt.legend()
+    plt.grid(True)
 
-    plot_data(4,
-            [promp1_human_avg_len_list, prompt1_llama3_avg_len_list, prompt1_gpt3_student_avg_len_list, prompt1_human_smoo_avg_list, prompt1_llama3_smoo_avg_list, prompt1_gpt3_smoo_avg_list],
-            ['Human', 'Llama3', 'GPT3', 'Human - Smoothed Average', 'Llama3 - Smoothed Average', 'GPT3 - Smoothed Average'],
-            ['b', 'r', 'g', 'black', 'black', 'black'],
-            'Word Embedding Vector Distances',
-            'Word Index',
-            'Vector Distance')
-
-    plot_data(5,
-            [prompt2_human_distances, prompt2_llama3_distances, prompt2_gpt3_distances, prompt2_gpt3_plain_distances],
-            ['Human Distances', 'Llama3 Distances', 'GPT3 Distances', 'GPT3 Plain Distances'],
-            ['b', 'r', 'g', 'y'],
-            'Prompt 2 - Avg. Euclidean Distances',
-            'Number of Answers',
-            'Average Distance')
-
-    plot_data(6,
-            [smoothing_average(prompt2_human_cosine_list, 2000), smoothing_average(prompt2_llama3_cosine_list, 2000), smoothing_average(prompt2_gpt3_cosine_list, 2000)],
-            ['Human Cosine Similarities', 'Llama3 Cosine Similarities', 'GPT3 Cosine Similarities'],
-            ['b', 'r', 'g'],
-            'Prompt 2 - Smothed Avg. of Cosine Similarity Scores',
-            'Number of Tokens',
-            'Cosine Similarity')
-
-    plot_data(7,
-            [smoothing_average(prompt2_human_cosine_variances, 1), smoothing_average(prompt2_llama3_cosine_variances, 1), smoothing_average(prompt2_gpt3_cosine_variances, 1)],
-            ['Human', 'Llama3', 'GPT3'],
-            ['b', 'r', 'g'],
-            'Prompt 2 - Cosine Variance',
-            'Number of Answers',
-            'Avg. Squared difference between record and mean')
-
-    plot_data(8,
-            [prompt2_human_avg_len_list, prompt2_llama3_avg_len_list, prompt2_gpt3_avg_len_list, prompt2_human_smoo_avg_list, prompt2_llama3_smoo_avg_list, prompt2_gpt3_smoo_avg_list],
-            ['Human', 'Llama3', 'GPT3', 'Human - Smoothed Average', 'Llama3 - Smoothed Average', 'GPT3 - Smoothed Average'],
-            ['b', 'r', 'g', 'black', 'black', 'black'],
-            'Prompt 2 - Word Embedding Vector Distances',
-            'Word Index',
-            'Vector Distance')
-         
     plt.tight_layout()
     plt.show()
     
+def create_prompt2_plots():
+    plt.figure(figsize=(20, 8))
+    plt.subplot(2, 2, 1)
+    plt.plot(prompt2_human.distances, label='Human', color='b')
+    # plt.plot(prompt2_llama2_student.distances, label='Llama2 Student', color='black')
+    plt.plot(prompt2_llama3_student.distances, label='Llama3 Student', color='r')
+    plt.plot(prompt2_gpt3_student.distances, label='GPT3 Student', color='g')
+    plt.plot(prompt2_gpt3_plain.distances, label='GPT3 Plain', color='y')
+    plt.plot(prompt2_gpt4_student.distances, label='GPT4 Student', color='orange')
+    # plt.plot(smoothing_average(prompt2_human_distances,5), label='Human - Smoothed Average', color='black')
+    # plt.plot(smoothing_average(prompt2_llama3_distances, 5), label='Llama3 - Smoothed Average', color='black')
+    plt.title('Prompt 2 - Avg. Euclidean Distance')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Average Distance')
+    plt.ylim(2.6, 3.2)
+    plt.xlim(0, 100)
+    plt.legend()
+    plt.grid(True)
 
+    plt.subplot(2, 2, 2)
+    plt.plot(prompt2_human.derivatives, label='Human', color='b')
+    #plt.plot(prompt2_llama2_student.derivatives, label='Llama2 Student', color='black')
+    plt.plot(prompt2_llama3_student.derivatives, label='Llama3 Student', color='r')
+    plt.plot(prompt2_gpt3_student.derivatives, label='GPT3 Student', color='g')
+    plt.plot(prompt2_gpt3_plain.derivatives, label='GPT3 Plain', color='y')
+    plt.plot(prompt2_gpt4_student.derivatives, label='GPT4 Student', color='orange')
+    #plt.plot(smoothing_average(prompt2_human.cosine_list, 2000), label='Human - Smoothed Average', color='black')
+    #plt.plot(smoothing_average(prompt2_llama3_student.cosine_list, 2000), label='Llama3 Student - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt2_gpt3_student.cosine_list, 2000), label='Gpt3 Student - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt2_gpt3_plain.cosine_list, 2000), label='Gpt3 Plain - Smoothed Avg.', color='black')
+    #plt.plot(smoothing_average(prompt2_gpt4_student.cosine_list, 2000), label='Gpt4 Student - Smoothed Avg', color='black')
+    plt.title('Prompt 2 - Derivatives')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Cosine Similarity')
+    plt.legend()
+    plt.grid(True)
+
+    plt.subplot(2, 2, 3)
+    plt.plot(smoothing_average(prompt2_human.cosine_variance_list, 1), label='Human', color='b')
+    # plt.plot(smoothing_average(prompt2_llama2_student.cosine_variance_list, 1), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt2_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='r')
+    plt.plot(smoothing_average(prompt2_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='g')
+    plt.plot(smoothing_average(prompt2_gpt3_plain.cosine_variance_list, 1), label='GPT3 Plain', color='y')
+    plt.plot(smoothing_average(prompt2_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
+    plt.title('Prompt 2 - Variance of Cosine Similarities')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Avg. Squared difference between record and mean')
+    plt.legend()
+    plt.grid(True)
+
+    plt.subplot(2, 2, 4)
+    plt.plot(prompt2_human.avg_len_list, label='Human', color='b')
+    # plt.plot(prompt2_llama2_student.avg_len_list, label='Llama2 Student', color='black')
+    plt.plot(prompt2_llama3_student.avg_len_list, label='Llama3 Student', color='r')
+    plt.plot(prompt2_gpt3_student.avg_len_list, label='GPT3 Student', color='g')
+    plt.plot(prompt2_gpt3_plain.avg_len_list, label='GPT3 Plain', color='y')
+    plt.plot(prompt2_gpt4_student.avg_len_list, label='GPT4 Student', color='orange')
+    #plt.plot(prompt2_human.smooth_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt2_llama3_student.smooth_avg_list, label='Llama3 Student - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt2_gpt3_student.smooth_avg_list, label='GPT3 Student - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt2_gpt3_plain.smooth_avg_list, label='GPT3 Plain - Smoothed Average', linestyle='--', color='black')
+    #plt.plot(prompt2_gpt4_student.smooth_avg_list, label='GPT4 Student - Smoothed Average', linestyle='--', color='black')
+    plt.title('Prompt 2 - Word Embedding Vector Distances')
+    plt.xlabel('Word Index')
+    plt.ylabel('Vector Distance')
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+    
 # Load the Word2Vec model
 #Todo! Add URL to source
 #model_path = 'models/GoogleNews-vectors-negative300.bin' 
@@ -243,147 +329,25 @@ prompt2_llama2_student_json_data = read_json_file('Test-Data/prompt2_llama2_stud
 prompt2_chatGpt3_json_data = read_json_file('Test-Data/output_chatGpt_prompt2_Student.json')
 prompt2_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt2_gpt3_plain.json')
 prompt2_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt2_gpt3_humanlike.json')
+prompt2_chatGpt4_student_json_data = read_json_file('Test-Data/prompt2_gpt4_student.json')
 
 # * Calculations for prompt 1
-promp1_human_avg_len_list, prompt1_human_vector_list, prompt1_human_cosine_list, prompt1_human_cosine_variances, prompt1_human_distances = calculate_distance_and_more('human', llama3_prompt1_json_data)
-prompt1_llama3_avg_len_list, prompt1_llama3_vector_list, prompt1_llama3_cosine_list, prompt1_llama3_cosine_variances, prompt1_llama3_distances = calculate_distance_and_more('ai', llama3_prompt1_json_data)
-prompt1_llama2_avg_len_list, prompt1_llama2_vector_list, prompt1_llama2_cosine_list, prompt1_llama2_cosine_variances, prompt1_llama2_distances = calculate_distance_and_more('human', prompt1_llama2_student_json_data)
-prompt1_gpt3_student_avg_len_list, prompt1_gpt3_student_vector_list, prompt1_gpt3_student_cosine_list, prompt1_gpt3_student_cosine_variances, prompt1_gpt3_student_distances = calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data)
-prompt1_gpt3_plain_avg_len_list, prompt1_gpt3_plain_vector_list, prompt1_gpt3_plain_cosine_list, prompt1_gpt3_plain_cosine_variances, prompt1_gpt3_plain_distances = calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data)
-prompt1_gpt3_humanlike_avg_len_list, prompt1_gpt3_humanlike_vector_list, prompt1_gpt3_humanlike_cosine_list, prompt1_gpt3_humanlike_cosine_variances, prompt1_gpt3_humanlike_distances = calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data)
-prompt1_gpt4_student_avg_len_list, prompt1_gpt4_student_vector_list, prompt1_gpt4_student_cosine_list, prompt1_gpt4_student_cosine_variances, prompt1_gpt4_student_distances = calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data)
+prompt1_human = CalculationsObject(*calculate_distance_and_more('human', llama3_prompt1_json_data))
+prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
+# prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt1_llama2_student_json_data))
+prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
+prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
+prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
+prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
 
 # * Calculations for prompt 2
-prompt2_human_avg_len_list, prompt2_human_vector_list, prompt2_human_cosine_list, prompt2_human_cosine_variances, prompt2_human_distances = calculate_distance_and_more('human', prompt_2_human_answers_json_data)
-prompt2_llama3_avg_len_list, prompt2_llama3_vector_list, prompt2_llama3_cosine_list, prompt2_llama3_cosine_variances, prompt2_llama3_distances = calculate_distance_and_more('ai', prompt2_llama3_json_data)
-prompt2_llama2_avg_len_list, prompt2_llama2_vector_list, prompt2_llama2_cosine_list, prompt2_llama2_cosine_variances, prompt2_llama2_distances = calculate_distance_and_more('human', prompt2_llama2_student_json_data)
-prompt2_gpt3_avg_len_list, prompt2_gpt3_vector_list, prompt2_gpt3_cosine_list, prompt2_gpt3_cosine_variances, prompt2_gpt3_distances = calculate_distance_and_more('ai', prompt2_chatGpt3_json_data)         
-prompt2_gpt3_plain_avg_len_list, prompt2_gpt3_plain_vector_list, prompt2_gpt3_plain_cosine_list, prompt2_gpt3_plain_cosine_variances, prompt2_gpt3_plain_distances = calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data)
+prompt2_human = CalculationsObject(*calculate_distance_and_more('human', prompt_2_human_answers_json_data))
+# prompt2_llama2_student = CalculationsObject(*calculate_distance_and_more('human', prompt2_llama2_student_json_data))
+prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
+prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
+prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
+prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
 
-# Calculate derivatives of the distance arrays for prompt 1
-prompt1_human_derivatives = np.gradient(prompt1_human_distances)
-prompt1_llama2_derivatives = np.gradient(prompt1_llama2_distances)
-prompt1_llama3_derivatives = np.gradient(prompt1_llama3_distances)
-prompt1_gpt3_derivatives = np.gradient(prompt1_gpt3_student_distances)
-prompt1_gpt3_plain_derivatives = np.gradient(prompt1_gpt3_plain_distances)
-
-# Calculate derivatives of the distance arrays for prompt 2
-prompt2_human_derivatives = np.gradient(prompt2_human_distances)
-prompt2_llama3_derivatives = np.gradient(prompt2_llama3_distances)
-prompt2_gpt3_derivatives = np.gradient(prompt2_gpt3_distances)
-
-# Calculate the smoothed average of the distance arrays for prompt 1
-prompt1_human_smoo_avg_list = smoothing_average(promp1_human_avg_len_list, 10)
-prompt1_llama3_smoo_avg_list = smoothing_average(prompt1_llama3_avg_len_list,10)
-prompt1_gpt3_smoo_avg_list = smoothing_average(prompt1_gpt3_student_avg_len_list,10)
-
-# Calculate the smoothed average of the distance arrays for prompt 2
-prompt2_human_smoo_avg_list = smoothing_average(prompt2_human_avg_len_list, 10)
-prompt2_llama3_smoo_avg_list = smoothing_average(prompt2_llama3_avg_len_list,10)
-prompt2_gpt3_smoo_avg_list = smoothing_average(prompt2_gpt3_avg_len_list,10)
-
-# create_plots()
-create_large_distance_plot()
-
-"""plt.subplot(2, 4, 1)
-plt.plot(prompt1_human_distances, label='human Distances', color='b')
-plt.plot(prompt1_llama3_distances, label='Llama3 Distances', color='r')
-plt.plot(prompt1_gpt3_distances, label='GPT3 Prompt 1 Distances', color='g')
-plt.plot(smoothing_average(prompt1_human_distances,5), label='Human - Smoothed Average', color='black')
-plt.plot(smoothing_average(prompt1_llama3_distances, 5), label='Llama3 - Smoothed Average', color='black')
-plt.title('Average Euclidean Distances for Word Pairs')
-plt.xlabel('Number of Answers')
-plt.ylabel('Average Distance')
-plt.legend()
-plt.grid(True)"""
-   
-
-""" # *  Plotting the Cosines of the Embedded Tokens
-plt.subplot(2, 4, 2)
-#plt.plot(human_derivatives, label='Derivative of Text 1 Distances', color='b')
-#plt.plot(synthetic_derivatives, label='Derivative of Text 2 Distances', color='r')
-plt.plot(prompt1_gpt3_derivatives, label='Derivative of Text 2 Distances', color='g')
-plt.plot(smoothing_average(prompt1_human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
-plt.plot(smoothing_average(prompt1_llama3_cosine_list, 2000), label='Llama3 Cosine Similarities', color='r')
-plt.plot(smoothing_average(prompt1_gpt3_cosine_list, 2000), label='GPT3 Cosine Similarities', color='g')
-plt.title('Smothed Average of Cosine Similarity Scores')
-plt.xlabel('Number of Tokens')
-plt.ylabel('Cosine Similarity')
-plt.legend()
-plt.grid(True) """
-
-
-""" # *  Plotting the Variances
-plt.subplot(2, 4, 3)
-plt.plot(smoothing_average(prompt1_human_cosine_variances, 1), label='Human Cosine Similarities', color='b')
-plt.plot(smoothing_average(prompt1_llama3_cosine_variances, 1), label='Llama3 Cosine Similarities', color='r')
-plt.plot(smoothing_average(prompt1_gpt3_cosine_variances, 1), label='GPT3 Cosine Similarities', color='g')
-plt.title('Variance')
-plt.xlabel('Number of Answers')
-plt.ylabel('Avg. Squared difference between record and mean')
-plt.legend()
-plt.grid(True) """
-
-""" # * Plotting the vector distances
-plt.subplot(2, 4, 4)
-plt.plot(promp1_human_avg_len_list, label='Human', color='b')
-plt.plot(prompt1_llama3_avg_len_list, label='Llama3', color='r')
-plt.plot(prompt1_gpt3_avg_len_list, label='GPT3', color='g')
-plt.plot(prompt1_human_smoo_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
-plt.plot(prompt1_llama3_smoo_avg_list, label='Llama3 - Smoothed Average', color='black')
-plt.plot(prompt1_gpt3_smoo_avg_list, label='GPT3 - Smoothed Average', color='black')
-plt.title('Word Embedding Vector Distances')
-plt.xlabel('Word Index')
-plt.ylabel('Vector Distance')
-plt.legend()
-plt.grid(True) """
-
-
-""" # Prompt 2 - Distances
-plt.subplot(2, 4, 5)
-plt.plot(prompt2_llama3_distances, label='Llama3 Distances', color='r')
-plt.plot(prompt2_gpt3_distances, label='GPT3 Prompt 2 Distances', color='g')
-plt.plot(prompt2_human_distances, label='human Distances', color='b')
-plt.title('Average Euclidean Distances for Word Pairs')
-plt.xlabel('Number of Answers')
-plt.ylabel('Average Distance')
-plt.legend()
-plt.grid(True) """
-
-
-""" # Plotting the Cosines of the Embedded Tokens
-plt.subplot(2, 4, 6)
-plt.plot(smoothing_average(prompt2_human_cosine_list, 2000), label='Human Cosine Similarities', color='b')
-plt.plot(smoothing_average(prompt2_llama3_cosine_list, 2000), label='Llama3 Cosine Similarities', color='r')
-plt.plot(smoothing_average(prompt2_gpt3_cosine_list, 2000), label='GPT3 Cosine Similarities', color='g')
-plt.title('Smothed Average of Cosine Similarity Scores')
-plt.xlabel('Number of Tokens')
-plt.ylabel('Cosine Similarity')
-plt.legend()
-plt.grid(True) """            
-
-""" # *  Plotting the variances
-plt.subplot(2, 4, 7)
-plt.plot(smoothing_average(prompt2_human_cosine_variances, 1), label='Human Cosine Similarities', color='b')
-plt.plot(smoothing_average(prompt2_llama3_cosine_variances, 1), label='Llama3 Cosine Similarities', color='r')
-plt.plot(smoothing_average(prompt2_gpt3_cosine_variances, 1), label='GPT3 Cosine Similarities', color='g')
-plt.title('Variance')
-plt.xlabel('Number of Answers')
-plt.ylabel('Avg. Squared difference between record and mean')
-plt.legend()
-plt.grid(True) """
-
-
-""" # * Plotting the vector distances
-plt.subplot(2, 4, 8)
-plt.plot(prompt2_human_avg_len_list, label='Human', color='b')
-plt.plot(prompt2_llama3_avg_len_list, label='Llama3', color='r')
-plt.plot(prompt2_gpt3_avg_len_list, label='GPT3', color='g')
-plt.plot(prompt2_human_smoo_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
-plt.plot(prompt2_llama3_smoo_avg_list, label='Llama3 - Smoothed Average', color='black')
-plt.plot(prompt2_gpt3_smoo_avg_list, label='GPT3 - Smoothed Average', color='black')
-plt.title('Word Embedding Vector Distances')
-plt.xlabel('Word Index')
-plt.ylabel('Vector Distance')
-plt.legend()
-plt.grid(True) """
+# create_prompt1_plots()
+# create_prompt2_plots()
+# create_large_distance_plot()
