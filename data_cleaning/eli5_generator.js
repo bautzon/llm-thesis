@@ -26,7 +26,7 @@ fs.readFile('eli5_100.json', 'utf8', (err, data) => {
         const jsonData = JSON.parse(data);
         const answers = jsonData.rows;
         let extractedData = [];
-        let startIndex = 30;
+        let startIndex = 90;
         (async () => {
             for (let i = startIndex; i < answers.length; i++) {
                 let answer = answers[i];
@@ -46,7 +46,7 @@ fs.readFile('eli5_100.json', 'utf8', (err, data) => {
 
                 extractedData.push(entryObj);
                 console.log(entryObj);
-                if (i >= startIndex + 19) break;
+                if (i >= startIndex + 10) break;
             }
             const outputFile = "eli5_llama2_2.json";
             const dataObject = { "Answers": extractedData };
