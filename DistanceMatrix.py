@@ -10,7 +10,7 @@ class CalculationsObject:
     Class to store the calculated data for each model
     Contains all the data calculated for a model
     """
-    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances):
+    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, avg_vector_norms, covariances):
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
         self.cosine_list = cosine_list
@@ -18,6 +18,8 @@ class CalculationsObject:
         self.distances = distances
         self.derivatives = np.gradient(distances)
         self.smooth_avg_list = smoothing_average(avg_len_list, 10)
+        self.avg_vector_norms = avg_vector_norms
+        self.covariances = covariances
 
 def create_large_distance_plot():
     plt.figure(figsize=(20, 8))
@@ -61,7 +63,6 @@ def calculate_distances_for_text(text, model):
                  for word1, word2 in word_pairs if word1 in model and word2 in model]
     if distances:
         return np.mean(distances)
-    # print(word_pairs)
     return None
 
 def cosine_similarity(vector1, vector2):
@@ -90,15 +91,6 @@ def calculate_variance_of_cosine_similarities(text, model):
     else:
         return None
 
-    plt.subplot(2, 4, subplot)
-    for i in range(len(data)):
-        plt.plot(data[i], label=labels[i], color=colors[i])
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.legend()
-    plt.grid(True)
-
 def get_word_embedding(token, model):
     try:
         embedding = model[token]
@@ -109,13 +101,29 @@ def get_word_embedding(token, model):
     
 def calculate_distance(current_word, previous_word):
     if previous_word in model and current_word in model:
-        return distance.euclidean(model[previous_word], model[current_word])
+        dist = distance.euclidean(model[previous_word], model[current_word])
+        return dist
     else:
         return None
+    # [abe][kat][banan][kugle]
+    #   [43]   [23]   [12]
+      
 
 def calculate_vector_norms(words, model):
+    """
+    Calculates the L2 norm of the word vectors in the model for the words in the words list.
+    """
     norms = [np.linalg.norm(model[word]) for word in words if word in model]
     return norms
+
+
+def calculate_average_norms(words, model):
+    """
+    Calculates the average L2 norm of the word vectors in the model for the words in the words list.
+    """
+    norms = calculate_vector_norms(words, model)
+    average_norm = np.mean(norms)
+    return average_norm
 
 def smoothing_average(values, window_size):
     result = []
@@ -134,10 +142,17 @@ def calculate_distance_and_more(creator, json_data):
     vector_list = []
     cosine_list = []
     variance_list = []
+    current_word_embedding = []
+    previous_word_embedding = []
+    covariances = []
+    vector_list_var = []
+    avg_vector_norms = []
     cosine_variance_list = []
+    euclidean_distance_variance= []
     distances = []
-    previous_word = None
     for answer in json_data:
+        cosine_list = []
+        previous_word = None
         if answer['creator'] == creator:
             answer_text = answer['answer']
             dist = calculate_distances_for_text(answer_text, model)
@@ -157,12 +172,60 @@ def calculate_distance_and_more(creator, json_data):
                         vector_distance = calculate_distance(current_word, previous_word)
                         vector_list.append(vector_distance)
                         if previous_word in model and current_word in model:
+                            
+                            #*Covariance
+                            current_word_embedding = model[current_word]
+                            previous_word_embedding = model[previous_word]
+                            mean_current = np.mean(current_word_embedding)
+                            mean_previous = np.mean(previous_word_embedding)
+                            deviation_current = current_word_embedding-mean_current
+                            deviation_previous = previous_word_embedding-mean_previous
+                            euclid_covariance = np.mean(deviation_current * deviation_previous)
+                          
+                            #* Cosine Similarity Variance
                             sim = cosine_similarity(model[previous_word], model[current_word])
                             cosine_list.append(sim) 
-                            variance = np.var(cosine_list)   
+                            variance = np.var(cosine_list)
+                    cosine_variance_list.append(variance)        
+                    
                     previous_word = current_word
-            cosine_variance_list.append(variance)
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances
+            
+            
+            covariances.append(euclid_covariance)
+            #print(average_norm)
+            #euclidean_distance_variance= np.var(average_norm)
+            #print(euclidean_distance_variance)
+    #print(avg_vector_norms)
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, avg_vector_norms, covariances
+
+
+def create_vector_plot():
+    plt.figure(3, figsize=(20,8))
+    plt.subplot(1, 1, 1)
+    plt.plot(prompt1_gpt3_student.avg_vector_norms, label="Gpt3 student", color="purple")
+    plt.title('Prompt 1 - Avg. Vector norms')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Average vector norms')
+    plt.legend()
+    plt.grid(True)
+    
+    
+def create_covariance_plot():
+    plt.figure(3, figsize=(20,8))
+    plt.subplot(1, 1, 1)
+    plt.plot(smoothing_average(prompt1_human.covariances, 10), label="Human", color="b")
+    plt.plot(smoothing_average(prompt1_gpt3_student.covariances,10), label="Gpt3 student", color="r")
+    plt.plot(smoothing_average(prompt1_llama3_student.covariances, 10), label='Llama3 Student', color='r')
+    plt.plot(smoothing_average(prompt1_gpt3_humanlike.covariances, 10), label='GPT3 Humanlike', color='y')
+    plt.plot(smoothing_average(prompt1_gpt3_student.covariances,10), label='GPT3 Student', color='purple')
+    plt.plot(smoothing_average(prompt1_gpt3_plain.covariances, 10), label='GPT3 Plain', color='black')
+    plt.plot(smoothing_average(prompt1_gpt4_student.covariances,10), label='GPT4 Student', color='orange')
+    plt.title('Prompt 1 Covariance plot')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Covariance')
+    plt.legend()
+    plt.grid(True)
+
 
 def create_prompt1_plots():
     """
@@ -242,7 +305,7 @@ def create_prompt1_plots():
     plt.grid(True)
 
     plt.tight_layout()
-    
+      
 def create_prompt2_plots():
     """
     Creates the plots for the data of prompt 2
@@ -423,12 +486,14 @@ model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 # To read, calculate and show prompt 1 data uncomment the following lines
 read_prompt1_data()
 calculate_prompt1()
-create_prompt1_plots()
+#create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-read_prompt2_data()
-calculate_prompt2()
-create_prompt2_plots()
+#read_prompt2_data()
+#calculate_prompt2()
+#create_prompt2_plots()
+#create_vector_plot()
+create_covariance_plot()
 
 plt.show() # Needed in the end to show the plots
 
