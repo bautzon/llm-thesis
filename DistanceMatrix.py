@@ -413,23 +413,124 @@ def calculate_prompt2():
     global prompt2_gpt4_student
     prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
 
+def read_eli5_data():
+    global eli5_json_data
+    eli5_json_data = read_json_file('Test-Data/eli5_2.json')
+
+def calculate_eli5():
+    global eli5_human
+    global eli5_llama2
+    global eli5_llama3
+    global eli5_chatGpt3
+    
+    eli5_human = CalculationsObject(*calculate_eli5_distances_and_more('human', eli5_json_data))
+    eli5_llama2 = CalculationsObject(*calculate_eli5_distances_and_more('llama2', eli5_json_data))
+    eli5_llama3 = CalculationsObject(*calculate_eli5_distances_and_more('llama3', eli5_json_data))
+    eli5_chatGpt3 = CalculationsObject(*calculate_eli5_distances_and_more('chatGpt3', eli5_json_data))
+        
+def calculate_eli5_distances_and_more(eli5_model, json_data):
+    avg_len_list = []
+    vector_list = []
+    cosine_list = []
+    variance_list = []
+    cosine_variance_list = []
+    distances = []
+    previous_word = None
+    for answer in json_data:
+        answer_text = answer[eli5_model]
+        dist = calculate_distances_for_text(answer_text, model)
+        if dist is not None:
+            distances.append(dist)
+        words = answer_text.split()
+        vector_norms = calculate_vector_norms(words, model)
+        if vector_norms:
+            average_norm = np.mean(vector_norms)
+            avg_len_list.append(average_norm)
+        for word in words:
+            word_embedding = get_word_embedding(word, model)
+            if word_embedding is not None:
+                current_word = word
+                if previous_word != current_word:
+                    #Do something with the word embedding or token
+                    vector_distance = calculate_distance(current_word, previous_word)
+                    vector_list.append(vector_distance)
+                    if previous_word in model and current_word in model:
+                        sim = cosine_similarity(model[previous_word], model[current_word])
+                        cosine_list.append(sim) 
+                        variance = np.var(cosine_list)   
+                previous_word = current_word
+        cosine_variance_list.append(variance)
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances
+
+def create_eli5_plots():
+    plt.figure(1, figsize=(20, 8))
+    plt.subplot(2, 2, 1)
+    """ plt.plot(eli5_human.distances, label='Human', color='black')
+    plt.plot(eli5_llama2.distances, label='Llama2', color='y')
+    plt.plot(eli5_llama3.distances, label='Llama3', color='purple')
+    plt.plot(eli5_chatGpt3.distances, label='GPT3', color='b') """
+    plt.plot(smoothing_average(eli5_human.distances, 10), label='Human - Smoothed Average', color='black')
+    plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2 - Smoothed Average', color='y')
+    plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3 - Smoothed Average', color='purple')
+    plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='b')
+    plt.title('Prompt 1 - Avg. Euclidean Distance')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Average Distance')
+    plt.ylim(2.5, 3.3)
+    plt.xlim(0, 100)
+    plt.legend()
+    plt.grid(True)
+    
+    
+    plt.subplot(2, 2, 2)
+    plt.plot(eli5_human.derivatives, label='Human', color='black')
+    plt.plot(eli5_llama2.derivatives, label='Llama2', color='y')
+    plt.plot(eli5_llama3.derivatives, label='Llama3', color='purple')
+    plt.plot(eli5_chatGpt3.derivatives, label='GPT3', color='b')
+    plt.title('Prompt 1 - Derivatives')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Cosine Similarity')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(2, 2, 3)
+    plt.plot(smoothing_average(eli5_human.cosine_variance_list, 1), label='Human', color='black')
+    plt.plot(smoothing_average(eli5_llama2.cosine_variance_list, 1), label='Llama2', color='y')
+    plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 1), label='Llama3', color='purple')
+    plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 1), label='GPT3', color='b')
+    plt.title('Prompt 1 - Variance of Cosine Similarities')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Avg. Squared difference between record and mean')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(2, 2, 4)
+    plt.plot(eli5_human.avg_len_list, label='Human', color='black')
+    plt.plot(eli5_llama2.avg_len_list, label='Llama2', color='y')
+    plt.plot(eli5_llama3.avg_len_list, label='Llama3', color='purple')
+    plt.plot(eli5_chatGpt3.avg_len_list, label='GPT3', color='b')
+    plt.title('Prompt 1 - Word Embedding Vector Distances')
+    plt.xlabel('Word Index')
+    plt.ylabel('Vector Distance')
+    plt.legend()
+    plt.grid(True)
 
 # Load the Word2Vec model
-#Todo! Add URL to source
-#model_path = 'models/GoogleNews-vectors-negative300.bin' 
 model_path = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
 # To read, calculate and show prompt 1 data uncomment the following lines
-read_prompt1_data()
-calculate_prompt1()
-create_prompt1_plots()
+#read_prompt1_data()
+#calculate_prompt1()
+#create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-read_prompt2_data()
-calculate_prompt2()
-create_prompt2_plots()
+#read_prompt2_data()
+#calculate_prompt2()
+#create_prompt2_plots()
+
+read_eli5_data()
+calculate_eli5()
+create_eli5_plots()
 
 plt.show() # Needed in the end to show the plots
-
-#create_large_distance_plot()
