@@ -1,3 +1,5 @@
+import os
+import pickle
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +7,11 @@ from gensim.models import KeyedVectors
 from scipy.spatial import distance  # Import the module
 from scipy.spatial.distance import cosine  # Import the cosine function directly
 
+# If set to True, the data will be recalculated and saved to a file
+# If set to False, the data will be loaded from the file
+GENERATE_NEW_DATA = True
+MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
+MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
 
 class CalculationsObject:
     """
@@ -114,8 +121,8 @@ def get_word_embedding(token, input_model):
 
 
 def calculate_distance(current_word, previous_word):
-    if previous_word in model and current_word in model:
-        return distance.euclidean(model[previous_word], model[current_word])
+    if previous_word in MODEL and current_word in MODEL:
+        return distance.euclidean(MODEL[previous_word], MODEL[current_word])
     else:
         return None
 
@@ -157,23 +164,23 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
         words = answer_text.split()
 
         # Calculate distances
-        dist = calculate_distances_for_text(answer_text, model)
+        dist = calculate_distances_for_text(answer_text, MODEL)
         if dist is not None:
             distances.append(dist)
 
         vector_norms = []
         for i in range(len(words) - 1):
             current_word, next_word = words[i], words[i + 1]
-            if current_word in model and next_word in model:
+            if current_word in MODEL and next_word in MODEL:
                 # Calculate the vector norm
-                vector_norms.append(np.linalg.norm(model[current_word]))
+                vector_norms.append(np.linalg.norm(MODEL[current_word]))
 
                 # Calculate vector distance and cosine similarity
-                vector_list.append(distance.euclidean(model[current_word], model[next_word]))
-                cosine_list.append(cosine_similarity(model[current_word], model[next_word]))
+                vector_list.append(distance.euclidean(MODEL[current_word], MODEL[next_word]))
+                cosine_list.append(cosine_similarity(MODEL[current_word], MODEL[next_word]))
 
                 # Calculate covariances
-                current_word_embedding, next_word_embedding = model[current_word], model[next_word]
+                current_word_embedding, next_word_embedding = MODEL[current_word], MODEL[next_word]
                 mean_current_word, mean_next_word = np.mean(current_word_embedding), np.mean(next_word_embedding)
                 deviation_current_word, deviation_next_word = current_word_embedding - mean_current_word, next_word_embedding - mean_next_word
                 euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
@@ -194,6 +201,21 @@ def calculate_prompt1():
     Creates the objects containing the calculated data for prompt 1
     It assigns the objects to global variables accessible from the entire script
     """
+
+    data_file = "pickles/prompt1_data.pkl"
+    global prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student
+    # Check if the data file exists
+    if os.path.exists(data_file) and not GENERATE_NEW_DATA:
+        try:
+            # load the data from the file
+            with open(data_file, "rb") as file:
+                data = pickle.load(file)
+            prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = data
+            return
+        except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
+            print(f"Error loading the data file: {e}")
+
+    # If the data file does not exist, generate the data
     llama3_prompt1_json_data = read_json_file('Test-Data/combined.json')
     prompt1_llama2_student_json_data = read_json_file('Test-Data/prompt1_llama2_student.json')
     prompt1_chatGpt3_student_json_data = read_json_file('Test-Data/output_chatGpt_prompt1_Student.json')
@@ -201,26 +223,20 @@ def calculate_prompt1():
     prompt1_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt1_gpt3_humanlike.json')
     prompt1_chatGpt4_student_json_data = read_json_file('Test-Data/prompt1_gpt4_student.json')
 
-    global prompt1_human
     prompt1_human = CalculationsObject(*calculate_distance_and_more('human', llama3_prompt1_json_data))
-
-    global prompt1_llama3_student
-    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
-
-    global prompt1_llama2_student
     prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_llama2_student_json_data))
-
-    global prompt1_gpt3_student
+    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
     prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
-
-    global prompt1_gpt3_plain
     prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
-
-    global prompt1_gpt3_humanlike
-    prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
-
-    global prompt1_gpt4_student
+    prompt1_gpt3_humanlike = CalculationsObject(
+        *calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
     prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
+
+    # Save the data to a file
+    with open(data_file, "wb") as file:
+        data = (prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain,
+                prompt1_gpt3_humanlike, prompt1_gpt4_student)
+        pickle.dump(data, file)
 
 
 def calculate_prompt2():
@@ -228,6 +244,20 @@ def calculate_prompt2():
     Creates the objects containing the calculated data for prompt 2
     It assigns the objects to global variables accessible from the entire script
     """
+
+    data_file = "pickles/prompt2_data.pkl"
+    global prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student
+    # Check if the data file exists
+    if os.path.exists(data_file) and not GENERATE_NEW_DATA:
+        try:
+            # load the data from the file
+            with open(data_file, "rb") as file:
+                data = pickle.load(file)
+            prompt2_human, prompt2_llaama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student = data
+            return
+        except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
+            print(f"Error loading the data file: {e}")
+
     prompt_2_human_answers_json_data = read_json_file('Test-Data/prompt_2_human_output.json')
     prompt2_llama3_json_data = read_json_file('Test-Data/prompt_2_ai_output.json')
     prompt2_llama2_student_json_data = read_json_file('Test-Data/prompt2_llama2_student.json')
@@ -236,50 +266,75 @@ def calculate_prompt2():
     prompt2_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt2_gpt3_humanlike.json')
     prompt2_chatGpt4_student_json_data = read_json_file('Test-Data/prompt2_gpt4_student.json')
 
-    global prompt2_human
     prompt2_human = CalculationsObject(*calculate_distance_and_more('human', prompt_2_human_answers_json_data))
-
-    global prompt2_llama2_student
-    globalprompt2_llama2_student = CalculationsObject(
-        *calculate_distance_and_more('ai', prompt2_llama2_student_json_data))
-
-    global prompt2_llama3_student
+    prompt2_llama2_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama2_student_json_data))
     prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
-
-    global prompt2_gpt3_student
     prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
-
-    global prompt2_gpt3_plain
     prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
-
-    global prompt2_gpt4_student
+    prompt2_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_humanlike_json_data))
     prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
+
+    # Save the data to a file
+    with open(data_file, "wb") as file:
+        data = (prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain,
+                prompt2_gpt3_humanlike, prompt2_gpt4_student)
+        pickle.dump(data, file)
 
 
 def calculate_eli5():
+    global eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3
+
+    data_file = "pickles/eli5_data.pkl"
+    # Check if the data file exists
+    if os.path.exists(data_file) and not GENERATE_NEW_DATA:
+        try:
+            # load the data from the file
+            with open(data_file, "rb") as file:
+                data = pickle.load(file)
+            eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = data
+            return
+        except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
+            print(f"Error loading the data file: {e}")
+
     eli5_json_data = read_json_file('Test-Data/eli5_2.json')
-    global eli5_human
-    global eli5_llama2
-    global eli5_llama3
-    global eli5_chatGpt3
 
     eli5_human = CalculationsObject(*calculate_distance_and_more('human', eli5_json_data, True))
     eli5_llama2 = CalculationsObject(*calculate_distance_and_more('llama2', eli5_json_data, True))
     eli5_llama3 = CalculationsObject(*calculate_distance_and_more('llama3', eli5_json_data, True))
     eli5_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', eli5_json_data, True))
 
+    # Save the data to a file
+    with open(data_file, "wb") as file:
+        data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3)
+        pickle.dump(data, file)
+
 
 def calculate_openqa():
-    global openqa_human
-    global openqa_llama2
-    global openqa_llama3
-    global openqa_chatGpt3
+    global openqa_human, openqa_chatGpt3
+
+    data_file = "pickles/openqa_data.pkl"
+    # Check if the data file exists
+    if os.path.exists(data_file) and not GENERATE_NEW_DATA:
+        try:
+            # load the data from the file
+            with open(data_file, "rb") as file:
+                data = pickle.load(file)
+            openqa_human, openqa_chatGpt3 = data
+            return
+        except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
+            print(f"Error loading the data file: {e}")
+
     openqa_json_data = read_json_file('Test-Data/open_qa_cleaned.json')
 
     openqa_human = CalculationsObject(*calculate_distance_and_more('human', openqa_json_data, True))
     # openqa_llama2 = CalculationsObject(*calculate_openqa_distances_and_more('llama2', openqa_json_data))
     # openqa_llama3 = CalculationsObject(*calculate_openqa_distances_and_more('llama3', openqa_json_data))
     openqa_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', openqa_json_data, True))
+
+    # Save the data to a file
+    with open(data_file, "wb") as file:
+        data = (openqa_human, openqa_chatGpt3)
+        pickle.dump(data, file)
 
 
 def create_prompt1_plots():
@@ -341,7 +396,7 @@ def create_prompt1_plots():
     plt.title('Prompt 1 - Variance of Cosine Similarities')
     plt.xlabel('Number of Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
-    plt.ylim(0, 0.03)
+    plt.ylim(0.01, 0.023)
     plt.legend()
     plt.grid(True)
 
@@ -368,7 +423,7 @@ def create_prompt1_plots():
     plt.subplot(2, 3, 5)
     plt.plot(prompt1_human.covariances, label='Human', color='b')
     # plt.plot(prompt1_llama2_student.covariances, label='Llama2 Student', color='black')
-    #plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='r')
+    # plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='r')
     # plt.plot(prompt1_gpt3_humanlike.covariances, label='GPT3 Humanlike', color='y')
     # plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='purple')
     # plt.plot(prompt1_gpt3_plain.covariances, label='GPT3 Plain', color='black')
@@ -389,12 +444,12 @@ def create_prompt2_plots():
     plt.figure(2, figsize=(20, 8))
     plt.suptitle("Prompt 2")
     plt.subplot(2, 2, 1)
-    plt.plot(prompt2_human.distances, label='Human', color='b')
-    plt.plot(prompt2_llama2_student.distances, label='Llama2 Student', color='black')
-    plt.plot(prompt2_llama3_student.distances, label='Llama3 Student', color='r')
-    plt.plot(prompt2_gpt3_student.distances, label='GPT3 Student', color='g')
+    # plt.plot(prompt2_human.distances, label='Human', color='b')
+    # plt.plot(prompt2_llama2_student.distances, label='Llama2 Student', color='black')
+    # plt.plot(prompt2_llama3_student.distances, label='Llama3 Student', color='r')
+    # plt.plot(prompt2_gpt3_student.distances, label='GPT3 Student', color='g')
     # plt.plot(prompt2_gpt3_plain.distances, label='GPT3 Plain', color='y')
-    plt.plot(prompt2_gpt4_student.distances, label='GPT4 Student', color='orange')
+    # plt.plot(prompt2_gpt4_student.distances, label='GPT4 Student', color='orange')
 
     plt.plot(smoothing_average(prompt2_human.distances, 10), label='Human', color='b')
     plt.plot(smoothing_average(prompt2_llama2_student.distances, 10), label='Llama2 Student', color='black')
@@ -438,6 +493,7 @@ def create_prompt2_plots():
     plt.title('Prompt 2 - Variance of Cosine Similarities')
     plt.xlabel('Number of Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
+    plt.ylim(0.01, 0.025)
     plt.legend()
     plt.grid(True)
 
@@ -558,19 +614,16 @@ def create_openqa_plots():
     plt.grid(True)
 
 
-model_path = 'models/GoogleNews-vectors-negative300.bin'
-model = KeyedVectors.load_word2vec_format(model_path, binary=True)
-
 # To read, calculate and show prompt 1 data uncomment the following lines
 # calculate_prompt1()
 # create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-# calculate_prompt2()
-# create_prompt2_plots()
+calculate_prompt2()
+create_prompt2_plots()
 
-calculate_eli5()
-create_eli5_plots()
+# calculate_eli5()
+# create_eli5_plots()
 
 # calculate_openqa()
 # create_openqa_plots()
