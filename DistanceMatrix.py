@@ -413,11 +413,8 @@ def calculate_prompt2():
     global prompt2_gpt4_student
     prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
 
-def read_eli5_data():
-    global eli5_json_data
-    eli5_json_data = read_json_file('Test-Data/eli5_2.json')
-
 def calculate_eli5():
+    eli5_json_data = read_json_file('Test-Data/eli5_2.json')
     global eli5_human
     global eli5_llama2
     global eli5_llama3
@@ -464,6 +461,7 @@ def calculate_eli5_distances_and_more(eli5_model, json_data):
 
 def create_eli5_plots():
     plt.figure(1, figsize=(20, 8))
+    plt.suptitle("ELI5")
     plt.subplot(2, 2, 1)
     """ plt.plot(eli5_human.distances, label='Human', color='black')
     plt.plot(eli5_llama2.distances, label='Llama2', color='y')
@@ -473,7 +471,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2 - Smoothed Average', color='y')
     plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3 - Smoothed Average', color='purple')
     plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='b')
-    plt.title('Prompt 1 - Avg. Euclidean Distance')
+    plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
     plt.ylim(2.5, 3.3)
@@ -487,7 +485,7 @@ def create_eli5_plots():
     plt.plot(eli5_llama2.derivatives, label='Llama2', color='y')
     plt.plot(eli5_llama3.derivatives, label='Llama3', color='purple')
     plt.plot(eli5_chatGpt3.derivatives, label='GPT3', color='b')
-    plt.title('Prompt 1 - Derivatives')
+    plt.title('Derivatives')
     plt.xlabel('Number of Tokens')
     plt.ylabel('Cosine Similarity')
     plt.legend()
@@ -498,7 +496,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama2.cosine_variance_list, 1), label='Llama2', color='y')
     plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 1), label='Llama3', color='purple')
     plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 1), label='GPT3', color='b')
-    plt.title('Prompt 1 - Variance of Cosine Similarities')
+    plt.title('Variance of Cosine Similarities')
     plt.xlabel('Number of Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
     plt.legend()
@@ -509,28 +507,85 @@ def create_eli5_plots():
     plt.plot(eli5_llama2.avg_len_list, label='Llama2', color='y')
     plt.plot(eli5_llama3.avg_len_list, label='Llama3', color='purple')
     plt.plot(eli5_chatGpt3.avg_len_list, label='GPT3', color='b')
-    plt.title('Prompt 1 - Word Embedding Vector Distances')
+    plt.title('Word Embedding Vector Distances')
+    plt.xlabel('Word Index')
+    plt.ylabel('Vector Distance')
+    plt.legend()
+    plt.grid(True)    
+
+def calculate_openqa():
+    global openqa_human
+    global openqa_llama2
+    global openqa_llama3
+    global openqa_chatGpt3
+    openqa_json_data = read_json_file('Test-Data/open_qa_cleaned.json')
+    
+    openqa_human = CalculationsObject(*calculate_openqa_distances_and_more('human', openqa_json_data))
+    #openqa_llama2 = CalculationsObject(*calculate_openqa_distances_and_more('llama2', openqa_json_data))
+    #openqa_llama3 = CalculationsObject(*calculate_openqa_distances_and_more('llama3', openqa_json_data))
+    openqa_chatGpt3 = CalculationsObject(*calculate_openqa_distances_and_more('chatGpt3', openqa_json_data))
+    
+def create_openqa_plots():
+    plt.figure(1, figsize=(20, 8))
+    plt.suptitle("OpenQA")
+    plt.subplot(2, 2, 1)
+    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human - Smoothed Average', color='black')
+    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='b')
+    plt.title('Avg. Euclidean Distance')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Average Distance')
+    plt.ylim(2.5, 3.3)
+    plt.xlim(0, 100)
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(2, 2, 2)
+    plt.plot(openqa_human.derivatives, label='Human', color='black')
+    plt.plot(openqa_chatGpt3.derivatives, label='GPT3', color='b')
+    plt.title('Derivatives')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Cosine Similarity')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(2, 2, 3)
+    plt.plot(smoothing_average(openqa_human.cosine_variance_list, 1), label='Human', color='black')
+    plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='b')
+    plt.title('Variance of Cosine Similarities')
+    plt.xlabel('Number of Answers')
+    plt.ylabel('Avg. Squared difference between record and mean')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.subplot(2, 2, 4)
+    plt.plot(openqa_human.avg_len_list, label='Human', color='black')
+    plt.plot(openqa_chatGpt3.avg_len_list, label='GPT3', color='b')
+    plt.title('Word Embedding Vector Distances')
     plt.xlabel('Word Index')
     plt.ylabel('Vector Distance')
     plt.legend()
     plt.grid(True)
-
+    
+    
+    
 # Load the Word2Vec model
 model_path = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
 # To read, calculate and show prompt 1 data uncomment the following lines
-#read_prompt1_data()
-#calculate_prompt1()
-#create_prompt1_plots()
+read_prompt1_data()
+calculate_prompt1()
+create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
 #read_prompt2_data()
 #calculate_prompt2()
 #create_prompt2_plots()
 
-read_eli5_data()
-calculate_eli5()
-create_eli5_plots()
+#calculate_eli5()
+#create_eli5_plots()
+
+calculate_openqa()
+create_openqa_plots()
 
 plt.show() # Needed in the end to show the plots
