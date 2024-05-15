@@ -65,10 +65,10 @@ def generate_word_pairs(text):
     return [(words[i], words[i + 1]) for i in range(len(words) - 1)]
 
 
-def calculate_distances_for_text(text, model):
+def calculate_distances_for_text(text, input_model):
     word_pairs = generate_word_pairs(text)
-    distances = [distance.euclidean(model[word1], model[word2])
-                 for word1, word2 in word_pairs if word1 in model and word2 in model]
+    distances = [distance.euclidean(input_model[word1], input_model[word2])
+                 for word1, word2 in word_pairs if word1 in input_model and word2 in input_model]
     if distances:
         return np.mean(distances)
     # print(word_pairs)
@@ -81,9 +81,9 @@ def cosine_similarity(vector1, vector2):
     return cos_similarity
 
 
-def calculate_pairwise_cosine_similarities(words, model):
+def calculate_pairwise_cosine_similarities(words, input_model):
     similarities = []
-    vectors = [model[word] for word in words if word in model]
+    vectors = [input_model[word] for word in words if word in input_model]
 
     for i in range(len(vectors)):
         for j in range(i + 1, len(vectors)):
@@ -93,9 +93,9 @@ def calculate_pairwise_cosine_similarities(words, model):
     return similarities
 
 
-def calculate_variance_of_cosine_similarities(text, model):
+def calculate_variance_of_cosine_similarities(text, input_model):
     words = text.split()
-    similarities = calculate_pairwise_cosine_similarities(words, model)
+    similarities = calculate_pairwise_cosine_similarities(words, input_model)
 
     if similarities:  # Check if there are similarities computed
         variance = np.var(similarities)
@@ -104,9 +104,9 @@ def calculate_variance_of_cosine_similarities(text, model):
         return None
 
 
-def get_word_embedding(token, model):
+def get_word_embedding(token, input_model):
     try:
-        embedding = model[token]
+        embedding = input_model[token]
         return embedding
     except KeyError:
         # If the token is not found in the model's vocabulary, return None or a random vector
@@ -120,8 +120,8 @@ def calculate_distance(current_word, previous_word):
         return None
 
 
-def calculate_vector_norms(words, model):
-    norms = [np.linalg.norm(model[word]) for word in words if word in model]
+def calculate_vector_norms(words, input_model):
+    norms = [np.linalg.norm(input_model[word]) for word in words if word in input_model]
     return norms
 
 
@@ -558,7 +558,6 @@ def create_openqa_plots():
     plt.grid(True)
 
 
-# Load the Word2Vec model
 model_path = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 
@@ -570,10 +569,10 @@ model = KeyedVectors.load_word2vec_format(model_path, binary=True)
 # calculate_prompt2()
 # create_prompt2_plots()
 
-# calculate_eli5()
-# create_eli5_plots()
+calculate_eli5()
+create_eli5_plots()
 
-calculate_openqa()
-create_openqa_plots()
+# calculate_openqa()
+# create_openqa_plots()
 
 plt.show()  # Needed in the end to show the plots
