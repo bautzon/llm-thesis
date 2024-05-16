@@ -50,7 +50,7 @@ fs.readFile('open_qa.json', 'utf8', (err, data) => {
                 console.log(entryObj);
                 if (i >= startIndex + 99) break;
             }
-            const outputFile = "open_qa_cleaned.json";
+            const outputFile = "open_qa.json";
             const dataObject = { "Answers": extractedData };
             fs.writeFileSync(outputFile, JSON.stringify(dataObject, null, 2));
         })();
