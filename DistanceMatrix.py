@@ -9,9 +9,10 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = True
+GENERATE_NEW_DATA = False
 MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
 MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
+
 
 class CalculationsObject:
     """
@@ -26,10 +27,7 @@ class CalculationsObject:
         self.cosine_variance_list = cosine_variance_list
         self.distances = distances
         self.covariances = covariances
-        if len(distances) >= 2:
-            self.derivatives = np.gradient(distances)
-        else:
-            self.derivatives = None
+        self.derivatives = np.gradient(distances) if len(distances) > 1 else None
         self.smooth_avg_list = smoothing_average(avg_len_list, 10)
 
 
@@ -169,30 +167,45 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
             distances.append(dist)
 
         vector_norms = []
-        for i in range(len(words) - 1):
-            current_word, next_word = words[i], words[i + 1]
-            if current_word in MODEL and next_word in MODEL:
-                # Calculate the vector norm
-                vector_norms.append(np.linalg.norm(MODEL[current_word]))
+        i = 0
+        skip_increment = False
+        while i < len(words) - 1:
+            current_word = words[i]
+            if current_word in MODEL:
+                for j in range(i + 1, len(words)):
+                    next_word = words[j]
+                    if next_word in MODEL:
+                        print(f"Calculating distance between {current_word} and {next_word}")
+                        vector_norms.append(np.linalg.norm(MODEL[current_word]))
 
-                # Calculate vector distance and cosine similarity
-                vector_list.append(distance.euclidean(MODEL[current_word], MODEL[next_word]))
-                cosine_list.append(cosine_similarity(MODEL[current_word], MODEL[next_word]))
+                        # Calculate vector distance and cosine similarity
+                        vector_list.append(distance.euclidean(MODEL[current_word], MODEL[next_word]))
+                        cosine_list.append(cosine_similarity(MODEL[current_word], MODEL[next_word]))
 
-                # Calculate covariances
-                current_word_embedding, next_word_embedding = MODEL[current_word], MODEL[next_word]
-                mean_current_word, mean_next_word = np.mean(current_word_embedding), np.mean(next_word_embedding)
-                deviation_current_word, deviation_next_word = current_word_embedding - mean_current_word, next_word_embedding - mean_next_word
-                euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
-                covariances.append(euclid_covariance)
+                        # Calculate covariances
+                        current_word_embedding, next_word_embedding = MODEL[current_word], MODEL[next_word]
+                        mean_current_word, mean_next_word = np.mean(current_word_embedding), np.mean(
+                            next_word_embedding)
+                        deviation_current_word, deviation_next_word = current_word_embedding - mean_current_word, next_word_embedding - mean_next_word
+                        euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
+                        covariances.append(euclid_covariance)
+
+                        if cosine_list:
+                            variance = np.var(cosine_list)
+                            cosine_variance_list.append(variance)
+
+                        if vector_norms:
+                            avg_len_list.append(np.mean(vector_norms))
+
+                        i = j
+                        skip_increment = True
+                        break
+            if not skip_increment:
+                i += 1
+            else:
+                skip_increment = False
 
             # Calculate variance
-            if cosine_list:
-                variance = np.var(cosine_list)
-                cosine_variance_list.append(variance)
-
-            if vector_norms:
-                avg_len_list.append(np.mean(vector_norms))
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances
 
 
@@ -271,7 +284,8 @@ def calculate_prompt2():
     prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
     prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
     prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
-    prompt2_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_humanlike_json_data))
+    prompt2_gpt3_humanlike = CalculationsObject(
+        *calculate_distance_and_more('ai', prompt2_chatGpt3_humanlike_json_data))
     prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
 
     # Save the data to a file
@@ -344,7 +358,7 @@ def create_prompt1_plots():
     # * Plotting the original distance data
     plt.figure(1, figsize=(20, 8))
     plt.suptitle("Prompt 1")
-    plt.subplot(2, 3, 1)
+    plt.subplot(1, 3, 1)
     # plt.plot(prompt1_human.distances, label='Human', color='b')
     # plt.plot(prompt1_llama2_student.distances, label='Llama2 Student', color='black')
     # plt.plot(prompt1_llama3_student.distances, label='Llama3 Student', color='r')
@@ -361,31 +375,31 @@ def create_prompt1_plots():
     plt.title('Prompt 1 - Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.6, 3.2)
+    plt.ylim(2.6, 3.1)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(2, 3, 2)
-    plt.plot(prompt1_human.derivatives, label='Human', color='b')
-    plt.plot(prompt1_llama2_student.derivatives, label='Llama2 Student', color='black')
-    plt.plot(prompt1_llama3_student.derivatives, label='Llama3 Student', color='r')
+    plt.subplot(1, 3, 2)
+    plt.plot(prompt1_human.covariances, label='Human', color='b')
+    # plt.plot(prompt1_llama2_student.covariances, label='Llama2 Student', color='black')
+    plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='r')
     # plt.plot(prompt1_gpt3_humanlike.derivatives, label='GPT3 Humanlike', color='y')
-    plt.plot(prompt1_gpt3_student.derivatives, label='GPT3 Student', color='purple')
+    # plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='purple')
     # plt.plot(prompt1_gpt3_plain.derivatives, label='GPT3 Plain', color='black')
-    plt.plot(prompt1_gpt4_student.derivatives, label='GPT4 Student', color='orange')
+    # plt.plot(prompt1_gpt4_student.covariances, label='GPT4 Student', color='orange')
     # plt.plot(smoothing_average(prompt1_human.cosine_list, 2000), label='Human - Smoothed Average', color='black')
     # plt.plot(smoothing_average(prompt1_llama3_student.cosine_list, 2000), label='Llama3 Student - Smoothed Avg.', color='black')
     # plt.plot(smoothing_average(prompt1_gpt3_humanlike.cosine_list, 2000), label='Gpt3 Humanlike - Smoothed Avg.', color='black')
     # plt.plot(smoothing_average(prompt1_gpt3_plain.cosine_list, 2000), label='Gpt3 Plain - Smoothed Avg.', color='black')
     # plt.plot(smoothing_average(prompt1_gpt4_student.cosine_list, 2000), label='Gpt4 Student - Smoothed Avg', color='black')
-    plt.title('Prompt 1 - Derivatives')
+    plt.title('Prompt 1 - Covariances')
     plt.xlabel('Number of Tokens')
     plt.ylabel('Cosine Similarity')
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(2, 3, 3)
+    plt.subplot(1, 3, 3)
     plt.plot(smoothing_average(prompt1_human.cosine_variance_list, 1), label='Human', color='b')
     plt.plot(smoothing_average(prompt1_llama2_student.cosine_variance_list, 1), label='Llama2 Student', color='black')
     plt.plot(smoothing_average(prompt1_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='r')
@@ -393,44 +407,10 @@ def create_prompt1_plots():
     plt.plot(smoothing_average(prompt1_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='purple')
     # plt.plot(smoothing_average(prompt1_gpt3_plain.cosine_variance_list, 1), label='GPT3 Plain', color='black')
     plt.plot(smoothing_average(prompt1_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Variance of Cosine Similarities')
-    plt.xlabel('Number of Answers')
-    plt.ylabel('Avg. Squared difference between record and mean')
-    plt.ylim(0.01, 0.023)
-    plt.legend()
-    plt.grid(True)
-
-    plt.subplot(2, 3, 4)
-    plt.plot(prompt1_human.avg_len_list, label='Human', color='b')
-    plt.plot(prompt1_llama2_student.avg_len_list, label='Llama2 Student', color='black')
-    plt.plot(prompt1_llama3_student.avg_len_list, label='Llama3 Student', color='r')
-    # plt.plot(prompt1_gpt3_humanlike.avg_len_list, label='GPT3 Humanlike', color='y')
-    plt.plot(prompt1_gpt3_student.avg_len_list, label='GPT3 Student', color='purple')
-    # plt.plot(prompt1_gpt3_plain.avg_len_list, label='GPT3 Plain', color='black')
-    plt.plot(prompt1_gpt4_student.avg_len_list, label='GPT4 Student', color='orange')
-    # plt.plot(prompt1_human.smooth_avg_list, label='Human - Smoothed Average', linestyle='--', color='black')
-    # plt.plot(prompt1_llama3_student.smooth_avg_list, label='Llama3 Student - Smoothed Average', linestyle='--', color='black')
-    # plt.plot(prompt1_gpt3_humanlike.smooth_avg_list, label='GPT3 Humanlike - Smoothed Average', linestyle='--', color='black')
-    # plt.plot(prompt1_gpt3_student.smooth_avg_list, label='GPT3 Student - Smoothed Average', linestyle='--', color='black')
-    # plt.plot(prompt1_gpt3_plain.smooth_avg_list, label='GPT3 Plain - Smoothed Average', linestyle='--', color='black')
-    # plt.plot(prompt1_gpt4_student.smooth_avg_list, label='GPT4 Student - Smoothed Average', linestyle='--', color='black')
-    plt.title('Prompt 1 - Word Embedding Vector Distances')
-    plt.xlabel('Word Index')
-    plt.ylabel('Vector Distance')
-    plt.legend()
-    plt.grid(True)
-
-    plt.subplot(2, 3, 5)
-    plt.plot(prompt1_human.covariances, label='Human', color='b')
-    # plt.plot(prompt1_llama2_student.covariances, label='Llama2 Student', color='black')
-    # plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='r')
-    # plt.plot(prompt1_gpt3_humanlike.covariances, label='GPT3 Humanlike', color='y')
-    # plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='purple')
-    # plt.plot(prompt1_gpt3_plain.covariances, label='GPT3 Plain', color='black')
-    plt.plot(prompt1_gpt4_student.covariances, label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Covariances')
-    plt.xlabel('Number of Answers')
-    plt.ylabel('Covariance')
+    plt.title('Prompt 1 - Cosine variance')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Variance of Cosine Similarities')
+    plt.ylim(0.011, 0.022)
     plt.legend()
     plt.grid(True)
 
@@ -615,12 +595,12 @@ def create_openqa_plots():
 
 
 # To read, calculate and show prompt 1 data uncomment the following lines
-# calculate_prompt1()
-# create_prompt1_plots()
+calculate_prompt1()
+create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-calculate_prompt2()
-create_prompt2_plots()
+# calculate_prompt2()
+# create_prompt2_plots()
 
 # calculate_eli5()
 # create_eli5_plots()
