@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = False
+GENERATE_NEW_DATA = True
 MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
 MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
 
@@ -20,20 +20,20 @@ class CalculationsObject:
     Contains all the data calculated for a model
     """
 
-    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances):
+    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances, word_embeddings):
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
         self.cosine_list = cosine_list
         self.cosine_variance_list = cosine_variance_list
         self.distances = distances
         self.covariances = covariances
+        self.word_embeddings = word_embeddings
         self.derivatives = np.gradient(distances) if len(distances) > 1 else None
         self.smooth_avg_list = smoothing_average(avg_len_list, 10)
 
 
 def get_prompt1_data():
-    calculate_prompt1()
-    return prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student
+    return calculate_prompt1()
 
 
 def create_large_distance_plot():
@@ -157,6 +157,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
     cosine_variance_list = []
     distances = []
     covariances_per_answer = []
+    word_embeddings = []
 
     for answer in json_data:
         if is_eli5:
@@ -180,6 +181,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
         while i < len(words) - 1:
             current_word = words[i]
             if current_word in MODEL:
+                word_embeddings.append(MODEL[current_word])
                 for j in range(i + 1, len(words)):
                     next_word = words[j]
                     if next_word in MODEL:
@@ -214,7 +216,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
 
         covariances_per_answer.append(np.mean(covariances))
 
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, word_embeddings
 
 
 def calculate_prompt1():
@@ -232,7 +234,7 @@ def calculate_prompt1():
             with open(data_file, "rb") as file:
                 data = pickle.load(file)
             prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = data
-            return
+            return data
         except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
             print(f"Error loading the data file: {e}")
 
@@ -258,6 +260,8 @@ def calculate_prompt1():
         data = (prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain,
                 prompt1_gpt3_humanlike, prompt1_gpt4_student)
         pickle.dump(data, file)
+
+    return data
 
 
 def calculate_prompt2():
@@ -375,7 +379,7 @@ def create_prompt1_plots():
     plt.title('Prompt 1 - Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.6, 3.1)
+    # plt.ylim(2.6, 3.1)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -539,18 +543,23 @@ def create_openqa_plots():
     plt.tight_layout()
 
 
-# To read, calculate and show prompt 1 data uncomment the following lines
-calculate_prompt1()
-create_prompt1_plots()
+def main():
+    # To read, calculate and show prompt 1 data uncomment the following lines
+    calculate_prompt1()
+    create_prompt1_plots()
 
-# To read, calculate and show prompt 2 data uncomment the following lines
-# calculate_prompt2()
-# create_prompt2_plots()
+    # To read, calculate and show prompt 2 data uncomment the following lines
+    # calculate_prompt2()
+    # create_prompt2_plots()
 
-# calculate_eli5()
-# create_eli5_plots()
+    # calculate_eli5()
+    # create_eli5_plots()
 
-# calculate_openqa()
-# create_openqa_plots()
+    # calculate_openqa()
+    # create_openqa_plots()
 
-plt.show()  # Needed in the end to show the plots
+    plt.show()  # Needed in the end to show the plots
+
+
+if __name__ == '__main__':
+    main()
