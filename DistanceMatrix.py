@@ -33,7 +33,7 @@ class CalculationsObject:
 
 def get_prompt1_data():
     calculate_prompt1()
-    return prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student
+    return prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt4_student
 
 
 def create_large_distance_plot():
