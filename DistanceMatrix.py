@@ -20,12 +20,20 @@ class CalculationsObject:
     Contains all the data calculated for a model
     """
 
-    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances,
+    def __init__(self, avg_len_list, 
+                 vector_list, 
+                 cosine_list, 
+                 cosine_variance_list, 
+                 cosine_variance_per_answer, 
+                 distances, 
+                 covariances,
                  word_embeddings):
+        
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
         self.cosine_list = cosine_list
         self.cosine_variance_list = cosine_variance_list
+        self.cosine_variance_per_answer = cosine_variance_per_answer
         self.distances = distances
         self.covariances = covariances
         self.word_embeddings = word_embeddings
@@ -154,6 +162,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
     cosine_variance_list = []
     distances = []
     covariances_per_answer = []
+    cosine_variance_per_answer = []
     word_embeddings = []
 
     for answer in json_data:
@@ -212,8 +221,9 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
                 skip_increment = False
 
         covariances_per_answer.append(np.mean(covariances))
+        cosine_variance_per_answer.append(np.mean(cosine_variance_list))
 
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, word_embeddings
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, cosine_variance_per_answer, word_embeddings
 
 
 def get_prompt1_calculations():
@@ -545,12 +555,12 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    # create_prompt1_plots()
+    create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
-    # create_prompt2_plots()
+    create_prompt2_plots()
 
-    create_eli5_plots()
+    #create_eli5_plots()
 
     # create_openqa_plots()
 
