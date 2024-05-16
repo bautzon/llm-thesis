@@ -31,6 +31,11 @@ class CalculationsObject:
         self.smooth_avg_list = smoothing_average(avg_len_list, 10)
 
 
+def get_prompt1_data():
+    calculate_prompt1()
+    return prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student
+
+
 def create_large_distance_plot():
     plt.figure(figsize=(20, 8))
     plt.subplot(1, 1, 1)
