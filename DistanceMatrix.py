@@ -142,7 +142,7 @@ def smoothing_average(values, window_size):
         moving_sum += (values[i + window_size] - values[i])
         result.append(moving_sum / window_size)
 
-    weights = np.repeat(1.0, window_size) / window_size
+    # weights = np.repeat(1.0, window_size) / window_size
     # sma = np.convolve(values , weights, 'valid')
     return result
 
