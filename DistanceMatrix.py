@@ -10,8 +10,9 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
 GENERATE_NEW_DATA = False
-MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
-MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
+MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+# MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
+# MODEL = KeyedVectors.load_word2vec_format("models/wuju-news-300d-1M.vec")
 
 
 class CalculationsObject:
