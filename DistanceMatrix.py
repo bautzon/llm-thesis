@@ -10,8 +10,9 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
 GENERATE_NEW_DATA = False
-MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
-MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
+MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+# MODEL = KeyedVectors.load_word2vec_format('models/wiki-news-300d-1M.vec')
+# MODEL = KeyedVectors.load_word2vec_format('models/crawl-300d-2M.vec')
 
 
 class CalculationsObject:
@@ -376,11 +377,11 @@ def create_prompt1_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(prompt1_human.covariances, label='Human', color='blue')
-    plt.plot(prompt1_llama2_student.covariances, label='Llama2 Student', color='black')
-    plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='red')
-    plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='green')
-    plt.plot(prompt1_gpt4_student.covariances, label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt1_human.covariances, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt1_llama2_student.covariances, 5), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.covariances, 5), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt1_gpt3_student.covariances, 5), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt1_gpt4_student.covariances, 5), label='GPT4 Student', color='orange')
     plt.title('Prompt 1 - Covariances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Cosine Similarity')
@@ -425,11 +426,11 @@ def create_prompt2_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(prompt2_human.covariances, label='Human', color='blue')
-    plt.plot(prompt2_llama2_student.covariances, label='Llama2 Student', color='black')
-    plt.plot(prompt2_llama3_student.covariances, label='Llama3 Student', color='red')
-    plt.plot(prompt2_gpt3_student.covariances, label='GPT3 Student', color='green')
-    plt.plot(prompt2_gpt4_student.covariances, label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt2_human.covariances, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt2_llama2_student.covariances, 5), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt2_llama3_student.covariances, 5), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt2_gpt3_student.covariances, 5), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt2_gpt4_student.covariances, 5), label='GPT4 Student', color='orange')
     plt.title('Covariances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Cosine Similarity')
@@ -467,7 +468,7 @@ def create_eli5_plots():
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.7, 3.2)
+    # plt.ylim(2.7, 3.2)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -480,7 +481,8 @@ def create_eli5_plots():
     plt.title('Covariances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Covariance')
-    plt.ylim(0.002, 0.005)
+    # plt.ylim(0.002, 0.005)
+    plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
 
@@ -508,7 +510,7 @@ def create_openqa_plots():
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.8, 3.4)
+    # plt.ylim(2.8, 3.4)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -535,12 +537,12 @@ def create_openqa_plots():
 
 
 # To read, calculate and show prompt 1 data uncomment the following lines
-calculate_prompt1()
-create_prompt1_plots()
+# calculate_prompt1()
+# create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-# calculate_prompt2()
-# create_prompt2_plots()
+calculate_prompt2()
+create_prompt2_plots()
 
 # calculate_eli5()
 # create_eli5_plots()
