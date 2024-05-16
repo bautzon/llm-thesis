@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = False
+GENERATE_NEW_DATA = True
 MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
 MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
 
@@ -501,8 +501,8 @@ def create_openqa_plots():
     plt.figure(4, figsize=(20, 8))
     plt.suptitle("OpenQA")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human - Smoothed Average', color='black')
-    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='b')
+    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human - Smoothed Average', color='b')
+    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='black')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
@@ -512,8 +512,8 @@ def create_openqa_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(smoothing_average(openqa_human.covariances, 5), label='Human', color='black')
-    plt.plot(smoothing_average(openqa_chatGpt3.covariances, 5), label='GPT3', color='b')
+    plt.plot(smoothing_average(openqa_human.covariances, 5), label='Human', color='b')
+    plt.plot(smoothing_average(openqa_chatGpt3.covariances, 5), label='GPT3', color='black')
     plt.title('Covariances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Cosine Similarity')
@@ -521,8 +521,8 @@ def create_openqa_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(openqa_human.cosine_variance_list, 1), label='Human', color='black')
-    plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='b')
+    plt.plot(smoothing_average(openqa_human.cosine_variance_list, 1), label='Human', color='b')
+    plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='black')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Number of Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
@@ -533,15 +533,15 @@ def create_openqa_plots():
 
 
 # To read, calculate and show prompt 1 data uncomment the following lines
-calculate_prompt1()
-create_prompt1_plots()
+# calculate_prompt1()
+# create_prompt1_plots()
 
 # To read, calculate and show prompt 2 data uncomment the following lines
-calculate_prompt2()
-create_prompt2_plots()
+# calculate_prompt2()
+# create_prompt2_plots()
 
-calculate_eli5()
-create_eli5_plots()
+# calculate_eli5()
+# create_eli5_plots()
 
 calculate_openqa()
 create_openqa_plots()
