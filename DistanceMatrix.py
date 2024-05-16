@@ -76,7 +76,6 @@ def calculate_distances_for_text(text, input_model):
                  for word1, word2 in word_pairs if word1 in input_model and word2 in input_model]
     if distances:
         return np.mean(distances)
-    # print(word_pairs)
     return None
 
 
@@ -126,6 +125,9 @@ def calculate_distance(current_word, previous_word):
 
 
 def calculate_vector_norms(words, input_model):
+    """
+    Calculates the L2 norm of the word vectors in the model for the words in the words list.
+    """
     norms = [np.linalg.norm(input_model[word]) for word in words if word in input_model]
     return norms
 
