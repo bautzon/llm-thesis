@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = True
+GENERATE_NEW_DATA = False
 MODEL_PATH = 'models/GoogleNews-vectors-negative300.bin'
 MODEL = KeyedVectors.load_word2vec_format(MODEL_PATH, binary=True)
 
@@ -20,7 +20,8 @@ class CalculationsObject:
     Contains all the data calculated for a model
     """
 
-    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances, word_embeddings):
+    def __init__(self, avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances,
+                 word_embeddings):
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
         self.cosine_list = cosine_list
@@ -32,29 +33,25 @@ class CalculationsObject:
         self.smooth_avg_list = smoothing_average(avg_len_list, 10)
 
 
-def get_prompt1_data():
-    return calculate_prompt1()
-
-
-def create_large_distance_plot():
-    plt.figure(figsize=(20, 8))
-    plt.subplot(1, 1, 1)
-    plt.plot(smoothing_average(prompt1_human.distances, 5), label='Human', color='b')
-    # plt.plot(smoothing_average(prompt1_llama2.distances, 5), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt1_llama3_student.distances, 5), label='Llama3 Student', color='r')
-    plt.plot(smoothing_average(prompt1_gpt3_student.distances, 5), label='GPT3 Student', color='g')
-    plt.plot(smoothing_average(prompt1_gpt3_plain.distances, 5), label='GPT3 Plain', color='y')
-    plt.plot(smoothing_average(prompt1_gpt3_humanlike.distances, 5), label='GPT3 Humanlike', color='purple')
-    plt.plot(smoothing_average(prompt1_gpt4_student.distances, 5), label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Avg Euclidean Distances')
-    plt.xlabel('Number of Answers')
-    plt.ylabel('Average Distance')
-    plt.ylim(2.6, 3.2)
-    plt.xlim(0, 100)
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+# def create_large_distance_plot():
+#     plt.figure(figsize=(20, 8))
+#     plt.subplot(1, 1, 1)
+#     plt.plot(smoothing_average(prompt1_human.distances, 5), label='Human', color='b')
+#     # plt.plot(smoothing_average(prompt1_llama2.distances, 5), label='Llama2 Student', color='black')
+#     plt.plot(smoothing_average(prompt1_llama3_student.distances, 5), label='Llama3 Student', color='r')
+#     plt.plot(smoothing_average(prompt1_gpt3_student.distances, 5), label='GPT3 Student', color='g')
+#     plt.plot(smoothing_average(prompt1_gpt3_plain.distances, 5), label='GPT3 Plain', color='y')
+#     plt.plot(smoothing_average(prompt1_gpt3_humanlike.distances, 5), label='GPT3 Humanlike', color='purple')
+#     plt.plot(smoothing_average(prompt1_gpt4_student.distances, 5), label='GPT4 Student', color='orange')
+#     plt.title('Prompt 1 - Avg Euclidean Distances')
+#     plt.xlabel('Number of Answers')
+#     plt.ylabel('Average Distance')
+#     plt.ylim(2.6, 3.2)
+#     plt.xlim(0, 100)
+#     plt.legend()
+#     plt.grid(True)
+#     plt.tight_layout()
+#     plt.show()
 
 
 def read_json_file(file_path):
@@ -145,7 +142,7 @@ def smoothing_average(values, window_size):
         moving_sum += (values[i + window_size] - values[i])
         result.append(moving_sum / window_size)
 
-    weights = np.repeat(1.0, window_size) / window_size
+    # weights = np.repeat(1.0, window_size) / window_size
     # sma = np.convolve(values , weights, 'valid')
     return result
 
@@ -219,21 +216,19 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, word_embeddings
 
 
-def calculate_prompt1():
+def get_prompt1_calculations():
     """
     Creates the objects containing the calculated data for prompt 1
     It assigns the objects to global variables accessible from the entire script
     """
 
     data_file = "pickles/prompt1_data.pkl"
-    global prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student
     # Check if the data file exists
     if os.path.exists(data_file) and not GENERATE_NEW_DATA:
         try:
             # load the data from the file
             with open(data_file, "rb") as file:
                 data = pickle.load(file)
-            prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = data
             return data
         except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
             print(f"Error loading the data file: {e}")
@@ -264,22 +259,21 @@ def calculate_prompt1():
     return data
 
 
-def calculate_prompt2():
+def get_prompt2_calculations():
     """
     Creates the objects containing the calculated data for prompt 2
     It assigns the objects to global variables accessible from the entire script
     """
 
     data_file = "pickles/prompt2_data.pkl"
-    global prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student
+
     # Check if the data file exists
     if os.path.exists(data_file) and not GENERATE_NEW_DATA:
         try:
             # load the data from the file
             with open(data_file, "rb") as file:
                 data = pickle.load(file)
-            prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student = data
-            return
+            return data
         except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
             print(f"Error loading the data file: {e}")
 
@@ -306,10 +300,10 @@ def calculate_prompt2():
                 prompt2_gpt3_humanlike, prompt2_gpt4_student)
         pickle.dump(data, file)
 
+    return data
 
-def calculate_eli5():
-    global eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3
 
+def get_eli5_calculations():
     data_file = "pickles/eli5_data.pkl"
     # Check if the data file exists
     if os.path.exists(data_file) and not GENERATE_NEW_DATA:
@@ -317,8 +311,7 @@ def calculate_eli5():
             # load the data from the file
             with open(data_file, "rb") as file:
                 data = pickle.load(file)
-            eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = data
-            return
+            return data
         except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
             print(f"Error loading the data file: {e}")
 
@@ -334,10 +327,10 @@ def calculate_eli5():
         data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3)
         pickle.dump(data, file)
 
+    return data
 
-def calculate_openqa():
-    global openqa_human, openqa_chatGpt3
 
+def get_openqa_calculations():
     data_file = "pickles/openqa_data.pkl"
     # Check if the data file exists
     if os.path.exists(data_file) and not GENERATE_NEW_DATA:
@@ -345,8 +338,7 @@ def calculate_openqa():
             # load the data from the file
             with open(data_file, "rb") as file:
                 data = pickle.load(file)
-            openqa_human, openqa_chatGpt3 = data
-            return
+            return data
         except (pickle.UnpicklingError, EOFError, ImportError, IndexError) as e:
             print(f"Error loading the data file: {e}")
 
@@ -362,11 +354,16 @@ def calculate_openqa():
         data = (openqa_human, openqa_chatGpt3)
         pickle.dump(data, file)
 
+    return data
+
 
 def create_prompt1_plots():
     """
     Creates the plots for the data of prompt 1
     """
+
+    prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = get_prompt1_calculations()
+
     # * Plotting the original distance data
     plt.figure(1, figsize=(20, 8))
     plt.suptitle("Prompt 1")
@@ -416,6 +413,9 @@ def create_prompt2_plots():
     """
     Creates the plots for the data of prompt 2
     """
+
+    prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student = get_prompt2_calculations()
+
     plt.figure(2, figsize=(20, 8))
     plt.suptitle("Prompt 2")
     plt.subplot(1, 3, 1)
@@ -462,13 +462,11 @@ def create_prompt2_plots():
 
 
 def create_eli5_plots():
+    eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = get_eli5_calculations()
+
     plt.figure(3, figsize=(20, 8))
     plt.suptitle("ELI5")
     plt.subplot(1, 3, 1)
-    """ plt.plot(eli5_human.distances, label='Human', color='black')
-    plt.plot(eli5_llama2.distances, label='Llama2', color='y')
-    plt.plot(eli5_llama3.distances, label='Llama3', color='purple')
-    plt.plot(eli5_chatGpt3.distances, label='GPT3', color='b') """
     plt.plot(smoothing_average(eli5_human.distances, 10), label='Human - Smoothed Average', color='blue')
     plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2 - Smoothed Average', color='black')
     plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3 - Smoothed Average', color='red')
@@ -476,7 +474,7 @@ def create_eli5_plots():
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.7, 3.2)
+    # plt.ylim(2.7, 3.2)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -489,7 +487,7 @@ def create_eli5_plots():
     plt.title('Covariances')
     plt.xlabel('Number of Answers')
     plt.ylabel('Covariance')
-    plt.ylim(0.002, 0.005)
+    # plt.ylim(0.002, 0.005)
     plt.legend()
     plt.grid(True)
 
@@ -509,6 +507,8 @@ def create_eli5_plots():
 
 
 def create_openqa_plots():
+    openqa_human, openqa_chatGpt3 = get_openqa_calculations()
+
     plt.figure(4, figsize=(20, 8))
     plt.suptitle("OpenQA")
     plt.subplot(1, 3, 1)
@@ -545,17 +545,13 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    calculate_prompt1()
-    create_prompt1_plots()
+    # create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
-    # calculate_prompt2()
     # create_prompt2_plots()
 
-    # calculate_eli5()
-    # create_eli5_plots()
+    create_eli5_plots()
 
-    # calculate_openqa()
     # create_openqa_plots()
 
     plt.show()  # Needed in the end to show the plots
