@@ -154,24 +154,37 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
     plt.tight_layout()
     plt.show()
 
-#Todo find a better way than this
+
 #Prompt1
-logistic_regression_cos_var(prompt1_human.cosine_variance_per_answer, 
-                            prompt1_gpt4_student.cosine_variance_per_answer)
-logistic_regression_euclid_dist(prompt1_human.distances, prompt1_human.covariances, prompt1_gpt4_student.distances, prompt1_gpt4_student.covariances)
+def call_prompt1():
+    logistic_regression_cos_var(prompt1_human.cosine_variance_per_answer, 
+                                prompt1_gpt4_student.cosine_variance_per_answer)
+    logistic_regression_euclid_dist(prompt1_human.distances, prompt1_human.covariances, prompt1_gpt4_student.distances, prompt1_gpt4_student.covariances)
 
 #Prompt2
-logistic_regression_cos_var(prompt2_human.cosine_variance_per_answer, 
-                            prompt2_gpt4_student.cosine_variance_per_answer)
-logistic_regression_euclid_dist(prompt2_human.distances, prompt2_human.covariances, prompt2_gpt4_student.distances, prompt2_gpt4_student.covariances)
+def call_prompt2():
+    logistic_regression_cos_var(prompt2_human.cosine_variance_per_answer, 
+                                prompt2_gpt4_student.cosine_variance_per_answer)
+    logistic_regression_euclid_dist(prompt2_human.distances, prompt2_human.covariances, prompt2_gpt4_student.distances, prompt2_gpt4_student.covariances)
 
 #ELI5
-logistic_regression_cos_var(eli5_human.cosine_variance_per_answer, 
-                            eli5_llama3.cosine_variance_per_answer)
-logistic_regression_euclid_dist(eli5_human.distances, eli5_human.covariances, eli5_llama3.distances, eli5_llama3.covariances)
+def call_eli5():
+    logistic_regression_cos_var(eli5_human.cosine_variance_per_answer, 
+                                eli5_llama3.cosine_variance_per_answer)
+    logistic_regression_euclid_dist(eli5_human.distances, eli5_human.covariances, eli5_llama3.distances, eli5_llama3.covariances)
 
 #OpenQA
-logistic_regression_cos_var(openqa_human.cosine_variance_per_answer, 
-                            openqa_chatGpt3.cosine_variance_per_answer)
-logistic_regression_euclid_dist(openqa_human.distances, openqa_human.covariances, openqa_chatGpt3.distances, openqa_chatGpt3.covariances)
+def call_openqa():
+    logistic_regression_cos_var(openqa_human.cosine_variance_per_answer, 
+                                openqa_chatGpt3.cosine_variance_per_answer)
+    logistic_regression_euclid_dist(openqa_human.distances, openqa_human.covariances, openqa_chatGpt3.distances, openqa_chatGpt3.covariances)
 
+def main():
+    call_prompt1()
+    call_prompt2()
+    #call_eli5()
+    #call_openqa()
+    
+    
+if __name__ == "__main__":
+    main()
