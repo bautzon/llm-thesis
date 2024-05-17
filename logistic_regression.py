@@ -5,11 +5,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.inspection import DecisionBoundaryDisplay
-from DistanceMatrix import get_prompt1_calculations, get_prompt2_calculations, CalculationsObject
+from DistanceMatrix import get_openqa_calculations, get_eli5_calculations, get_prompt1_calculations, get_prompt2_calculations, CalculationsObject
 
 
 prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = get_prompt1_calculations()
 prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student = get_prompt2_calculations()
+eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = get_eli5_calculations()
+openqa_human, openqa_chatGpt3 = get_openqa_calculations()
 
 def logistic_regression_cos_var(human_cos_var, synthetic_cos_var):
     human_cosine_variance = np.array(human_cos_var)
@@ -151,9 +153,25 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
     
     plt.tight_layout()
     plt.show()
-    
 
+#Todo find a better way than this
+#Prompt1
+logistic_regression_cos_var(prompt1_human.cosine_variance_per_answer, 
+                            prompt1_gpt4_student.cosine_variance_per_answer)
+logistic_regression_euclid_dist(prompt1_human.distances, prompt1_human.covariances, prompt1_gpt4_student.distances, prompt1_gpt4_student.covariances)
+
+#Prompt2
 logistic_regression_cos_var(prompt2_human.cosine_variance_per_answer, 
                             prompt2_gpt4_student.cosine_variance_per_answer)
-
 logistic_regression_euclid_dist(prompt2_human.distances, prompt2_human.covariances, prompt2_gpt4_student.distances, prompt2_gpt4_student.covariances)
+
+#ELI5
+logistic_regression_cos_var(eli5_human.cosine_variance_per_answer, 
+                            eli5_llama3.cosine_variance_per_answer)
+logistic_regression_euclid_dist(eli5_human.distances, eli5_human.covariances, eli5_llama3.distances, eli5_llama3.covariances)
+
+#OpenQA
+logistic_regression_cos_var(openqa_human.cosine_variance_per_answer, 
+                            openqa_chatGpt3.cosine_variance_per_answer)
+logistic_regression_euclid_dist(openqa_human.distances, openqa_human.covariances, openqa_chatGpt3.distances, openqa_chatGpt3.covariances)
+
