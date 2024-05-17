@@ -17,18 +17,7 @@ def logistic_regression_cos_var(human_cos_var, synthetic_cos_var):
 
     labels_array_human = np.zeros(human_cosine_variance.shape)
     labels_array_gpt4 = np.ones(gpt4_cosine_variance.shape)
-    #* A literal fuckton of prints
-    # Print the arrays and their shapes
-    #print("human_cosine_variance:", human_cosine_variance)
-    #print("Shape of human_cosine_variance:", human_cosine_variance.shape)
-    #print("gpt4_cosine_variance:", gpt4_cosine_variance)
-    #print("Shape of gpt4_cosine_variance:", gpt4_cosine_variance.shape)
-    # Print the label arrays and their shapes
-    #print("labels_array_human:", labels_array_human)
-    #print("Shape of labels_array_human:", labels_array_human.shape)
-    #print("labels_array_gpt4:", labels_array_gpt4)
-    #print("Shape of labels_array_gpt4:", labels_array_gpt4.shape)
-
+    
     x = np.concatenate((human_cosine_variance, gpt4_cosine_variance)).reshape(-1, 1)
     y = np.concatenate((labels_array_human, labels_array_gpt4))
 
@@ -55,7 +44,7 @@ def logistic_regression_cos_var(human_cos_var, synthetic_cos_var):
     print(f"Classification Report: \n{report}")
 
     # Plotting
-    plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(10, 5))
 
     # Plot original data distributions
     plt.subplot(1, 2, 1)
@@ -87,29 +76,14 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
     human_2D = np.stack((human_distances, human_covariances),axis=1)
     
     robot_distances, robot_covariances = np.array(synthetic_dist),np.array(synthetic_cov)
-    
     robot_2D = np.stack((robot_distances, robot_covariances), axis=1)
-
-    #Check and print the shape of individual arrays
-    # print("Shape of human_distances:", human_distances.shape)
-    # print("Shape of human_covariances:", human_covariances.shape)
-    # print("Shape of human_2D:", human_2D.shape)
-    # print("Shape of robot_distances:", robot_distances.shape)
-    # print("Shape of robot_covariances:", robot_covariances.shape)
-    # print("Shape of robot_2D:", robot_2D.shape)
-
     
     x = np.vstack((human_2D, robot_2D))
-    #print("Shape of x_2D:", x.shape)
     
     y_human = np.zeros(len(human_distances))
     y_robot = np.ones(len(robot_distances))
     y = np.concatenate([y_human, y_robot])
     
-
-    #y = np.concatenate((labels_array_human, labels_array_gpt4))
-    #print("Shape of y (combined labels):", y.shape)
-
     # Split the data into training and testing sets
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
     #* Using stratify preserves the distribution across training and test sets, especially useful when dealing with imbalanced datasets
@@ -173,11 +147,9 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
         ylabel="Average of Cosine Similarity of Answers"
     )
     plt.legend()
-    # plt.scatter(x[:, 0], x[:, 1], c=y, s=20, edgecolors="k")
-
+    
+    
     plt.tight_layout()
-    
-    
     plt.show()
     
 
