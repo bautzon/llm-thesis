@@ -33,7 +33,7 @@ def logistic_regression_cos_var(human_cos_var, synthetic_cos_var):
     y = np.concatenate((labels_array_human, labels_array_gpt4))
 
     # # Split the data into training and testing sets
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
     # # Choose a classifier (Support Vector Machine in this case)
     classifier = LogisticRegression()
@@ -54,37 +54,31 @@ def logistic_regression_cos_var(human_cos_var, synthetic_cos_var):
     print(f"Variance of Cosine SimilarityAccuracy: {accuracy}")
     print(f"Classification Report: \n{report}")
 
-    # # Plotting
-    # plt.figure(figsize=(15, 5))
+    # Plotting
+    plt.figure(figsize=(15, 5))
 
-    # # Plot original data distributions
-    # plt.subplot(1, 3, 1)
-    # plt.hist(human_cosine_variance, bins=20, alpha=0.5, label='Array 1')
-    # plt.hist(gpt4_cosine_variance, bins=20, alpha=0.5, label='Array 2')
-    # plt.xlabel('Variance')
-    # plt.ylabel('Frequency')
-    # plt.title('Distribution of Variances')
-    # plt.legend()
+    # Plot original data distributions
+    plt.subplot(1, 2, 1)
+    plt.hist(human_cosine_variance, bins=20, alpha=0.5, label='Human Cosine Variance')
+    plt.hist(gpt4_cosine_variance, bins=20, alpha=0.5, label='Synthetic Cosine Variance')
+    plt.xlabel('Variance')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Variances')
+    plt.legend()
 
-    # # Plot decision boundary
-    # plt.subplot(1, 3, 2)
-    # DecisionBoundaryDisplay.from_estimator(classifier, x, response_method="predict", alpha=0.5)
-    # plt.scatter(x_train, y_train, c=y_train, edgecolors='k', cmap=plt.cm.coolwarm)
-    # plt.xlabel('Variance')
-    # plt.ylabel('Class Label')
-    # plt.title('Decision Boundary')
 
-    # # Plot classifier's predictions
-    # plt.subplot(1, 3, 3)
-    # plt.scatter(x_test, y_test, color='blue', label='Actual')
-    # plt.scatter(x_test, y_pred, color='red', marker='x', label='Predicted')
-    # plt.xlabel('Variance')
-    # plt.ylabel('Class Label')
-    # plt.title('Actual vs Predicted Labels')
-    # plt.legend()
 
-    # plt.tight_layout()
-    # plt.show()
+    # Plot classifier's predictions
+    plt.subplot(1, 2, 2)
+    plt.scatter(x_test, y_test, color='blue', label='Actual')
+    plt.scatter(x_test, y_pred, color='red', marker='x', label='Predicted')
+    plt.xlabel('Variance')
+    plt.ylabel('Class Label')
+    plt.title('Actual vs Predicted Labels')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 def logistic_regression_euclid_dist(human_dist,human_cov, 
                                     synthetic_dist, synthetic_cov):
@@ -96,7 +90,7 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
     
     robot_2D = np.stack((robot_distances, robot_covariances), axis=1)
 
-    # Check and print the shape of individual arrays
+    #Check and print the shape of individual arrays
     # print("Shape of human_distances:", human_distances.shape)
     # print("Shape of human_covariances:", human_covariances.shape)
     # print("Shape of human_2D:", human_2D.shape)
@@ -150,8 +144,40 @@ def logistic_regression_euclid_dist(human_dist,human_cov,
     plt.ylabel('Frequency')
     plt.title('Distribution of Distances')
     plt.legend()
+    
+     # Plot original data distributions
+    plt.subplot(1, 3, 2)
+    plt.hist(human_covariances, bins=20, alpha=0.5, label='Human Covariance')
+    plt.hist(robot_covariances, bins=20, alpha=0.5, label='Robot Covariance')
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Distances')
+    plt.legend()
+    
+
+    # Plot decision boundary
+    plt.subplot(1, 3, 3)
+    plt.scatter(x_train[:, 0], x_train[:, 1], c=y_train, edgecolors='k', cmap=plt.cm.coolwarm, marker='o', label='Training data')
+    # Plot the testing point
+    plt.scatter(x_test[:, 0], x_test[:, 1], c=y_test, edgecolors='k', cmap=plt.cm.coolwarm, marker='s', label='Testing data')
+    plt.xlabel('Variance')
+    plt.ylabel('Class Label')
+    plt.title('Decision Boundary')
+    DecisionBoundaryDisplay.from_estimator(
+        classifier,
+        x,
+        response_method="predict",
+        cmap=plt.cm.Spectral,
+        alpha=0.8,
+        xlabel="No. of Answers",
+        ylabel="Average of Cosine Similarity of Answers"
+    )
+    plt.legend()
+    # plt.scatter(x[:, 0], x[:, 1], c=y, s=20, edgecolors="k")
 
     plt.tight_layout()
+    
+    
     plt.show()
     
 
