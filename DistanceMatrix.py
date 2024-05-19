@@ -21,15 +21,15 @@ class CalculationsObject:
     Contains all the data calculated for a model
     """
 
-    def __init__(self, avg_len_list, 
-                 vector_list, 
-                 cosine_list, 
-                 cosine_variance_list, 
-                 cosine_variance_per_answer, 
-                 distances, 
+    def __init__(self, avg_len_list,
+                 vector_list,
+                 cosine_list,
+                 cosine_variance_list,
+                 cosine_variance_per_answer,
+                 distances,
                  covariances,
                  word_embeddings):
-        
+
         self.avg_len_list = avg_len_list
         self.vector_list = vector_list
         self.cosine_list = cosine_list
@@ -439,7 +439,7 @@ def create_prompt2_plots():
     plt.title('Prompt 2 - Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.6, 3.2)
+    # plt.ylim(2.6, 3.2)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -528,7 +528,7 @@ def create_openqa_plots():
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Number of Answers')
     plt.ylabel('Average Distance')
-    plt.ylim(2.8, 3.4)
+    # plt.ylim(2.8, 3.4)
     plt.xlim(0, 100)
     plt.legend()
     plt.grid(True)
@@ -556,14 +556,14 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    create_prompt1_plots()
+    # create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
-    create_prompt2_plots()
+    # create_prompt2_plots()
 
-    #create_eli5_plots()
+    # create_eli5_plots()
 
-    # create_openqa_plots()
+    create_openqa_plots()
 
     plt.show()  # Needed in the end to show the plots
 
