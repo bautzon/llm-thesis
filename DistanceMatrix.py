@@ -12,7 +12,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 GENERATE_NEW_DATA = False
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
-# MODEL = KeyedVectors.load_word2vec_format("models/wuju-news-300d-1M.vec")
+# MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
 
 
 class CalculationsObject:
@@ -384,8 +384,8 @@ def create_prompt1_plots():
     plt.plot(smoothing_average(prompt1_llama3_student.distances, 10), label='Llama3 Student', color='red')
     plt.plot(smoothing_average(prompt1_gpt3_student.distances, 10), label='GPT3 Student', color='green')
     plt.plot(smoothing_average(prompt1_gpt4_student.distances, 10), label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Avg. Euclidean Distance')
-    plt.xlabel('Number of Answers')
+    plt.title('Avg. Euclidean Distance')
+    plt.xlabel('Answers')
     plt.ylabel('Average Distance')
     # plt.ylim(2.6, 3.1)
     plt.xlim(0, 100)
@@ -398,8 +398,8 @@ def create_prompt1_plots():
     plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='red')
     plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='green')
     plt.plot(prompt1_gpt4_student.covariances, label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Covariances')
-    plt.xlabel('Number of Answers')
+    plt.title('Covariances')
+    plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
     plt.legend()
     plt.grid(True)
@@ -410,8 +410,8 @@ def create_prompt1_plots():
     plt.plot(smoothing_average(prompt1_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='red')
     plt.plot(smoothing_average(prompt1_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='green')
     plt.plot(smoothing_average(prompt1_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
-    plt.title('Prompt 1 - Cosine variance')
-    plt.xlabel('Number of Tokens')
+    plt.title('Cosine variance')
+    plt.xlabel('Tokens')
     plt.ylabel('Variance of Cosine Similarities')
     plt.ylim(0.011, 0.022)
     plt.legend()
@@ -436,8 +436,8 @@ def create_prompt2_plots():
     plt.plot(smoothing_average(prompt2_gpt3_student.distances, 10), label='GPT3 Student', color='green')
     plt.plot(smoothing_average(prompt2_gpt4_student.distances, 10), label='GPT4 Student', color='orange')
 
-    plt.title('Prompt 2 - Avg. Euclidean Distance')
-    plt.xlabel('Number of Answers')
+    plt.title('Avg. Euclidean Distance')
+    plt.xlabel('Answers')
     plt.ylabel('Average Distance')
     # plt.ylim(2.6, 3.2)
     plt.xlim(0, 100)
@@ -451,7 +451,7 @@ def create_prompt2_plots():
     plt.plot(prompt2_gpt3_student.covariances, label='GPT3 Student', color='green')
     plt.plot(prompt2_gpt4_student.covariances, label='GPT4 Student', color='orange')
     plt.title('Covariances')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
     plt.legend()
     plt.grid(True)
@@ -462,8 +462,8 @@ def create_prompt2_plots():
     plt.plot(smoothing_average(prompt2_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='red')
     plt.plot(smoothing_average(prompt2_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='green')
     plt.plot(smoothing_average(prompt2_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
-    plt.title('Prompt 2 - Variance of Cosine Similarities')
-    plt.xlabel('Number of Answers')
+    plt.title('Variance of Cosine Similarities')
+    plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
     plt.ylim(0.01, 0.025)
     plt.legend()
@@ -556,14 +556,14 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    # create_prompt1_plots()
+    create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
     # create_prompt2_plots()
 
     # create_eli5_plots()
 
-    create_openqa_plots()
+    # create_openqa_plots()
 
     plt.show()  # Needed in the end to show the plots
 

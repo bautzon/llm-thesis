@@ -16,7 +16,7 @@ function executeCommand(command) {
     });
 }
 
-fs.readFile('eli5_llama3_2.json', 'utf8', (err, data) => {
+fs.readFile('open_qa_cleaned.json', 'utf8', (err, data) => {
     if (err) {
         console.error('Error reading file:', err);
         return;
@@ -26,13 +26,13 @@ fs.readFile('eli5_llama3_2.json', 'utf8', (err, data) => {
         const jsonData = JSON.parse(data);
         const answers = jsonData.Answers;
         let extractedData = [];
-        let startIndex = 93;
-        let regex = /<\|begin_of_text\|><\|begin_of_text\|><\|start_header_id\|>system[\s\S]*?assistant<\|end_header_id\|>/g;
+        let startIndex = 90;
+        let eli5_regex = /<\|begin_of_text\|><\|begin_of_text\|><\|start_header_id\|>system[\s\S]*?assistant<\|end_header_id\|>/g;
         (async () => {
             for (let i = startIndex; i < answers.length; i++) {
                 let answer = answers[i];
                 const question = answer.prompt;
-                const final_question = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>{${question}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+                // const final_question = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>{${question}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
                 const command = `../llama.cpp/main -m ../llama.cpp/models/llama-2-13b-chat.Q5_K_M.gguf -p "${question}" --log-disable`;
                 // const command = `../llama.cpp/main -m ../llama.cpp/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf -p "${final_question}" --log-disable -c 2048`;
                 let response = await executeCommand(command);
@@ -44,16 +44,16 @@ fs.readFile('eli5_llama3_2.json', 'utf8', (err, data) => {
                     creator: "ai",
                     prompt: answer.prompt,
                     llama2: response,
-                    llama3: answer.llama3,
+                    // llama3: answer.llama3,
                     chatGpt3: answer.chatGpt3,
                     human: answer.human
                 };
 
                 extractedData.push(entryObj);
                 console.log(entryObj);
-                if (i >= startIndex) break;
+                if (i >= startIndex + 9) break;
             }
-            const outputFile = "eli5_llama2_3.json";
+            const outputFile = "openqa_llama2.json";
             const dataObject = { "Answers": extractedData };
             fs.writeFileSync(outputFile, JSON.stringify(dataObject, null, 2));
         })();
