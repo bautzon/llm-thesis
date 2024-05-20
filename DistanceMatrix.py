@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = True
+GENERATE_NEW_DATA = False
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
@@ -245,16 +245,16 @@ def get_prompt1_calculations():
             print(f"Error loading the data file: {e}")
 
     # If the data file does not exist, generate the data
-    llama3_prompt1_json_data = read_json_file('Test-Data/combined.json')
+    prompt1_llama3_student_json_data = read_json_file('Test-Data/combined.json')
     prompt1_llama2_student_json_data = read_json_file('Test-Data/prompt1_llama2_student.json')
     prompt1_chatGpt3_student_json_data = read_json_file('Test-Data/output_chatGpt_prompt1_Student.json')
     prompt1_chatGpt3_plain_json_data = read_json_file('Test-Data/prompt1_gpt3_plain.json')
     prompt1_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt1_gpt3_humanlike.json')
     prompt1_chatGpt4_student_json_data = read_json_file('Test-Data/prompt1_gpt4_student.json')
 
-    prompt1_human = CalculationsObject(*calculate_distance_and_more('human', llama3_prompt1_json_data))
+    prompt1_human = CalculationsObject(*calculate_distance_and_more('human', prompt1_llama3_student_json_data))
     prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_llama2_student_json_data))
-    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
+    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_llama3_student_json_data))
     prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
     prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
     prompt1_gpt3_humanlike = CalculationsObject(
@@ -556,7 +556,7 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    create_prompt1_plots()
+    # create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
     # create_prompt2_plots()
