@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = False
+GENERATE_NEW_DATA = True
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
@@ -483,7 +483,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3 - Smoothed Average', color='red')
     plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='green')
     plt.title('Avg. Euclidean Distance')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Average Distance')
     # plt.ylim(2.7, 3.2)
     plt.xlim(0, 100)
@@ -496,7 +496,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama3.covariances, 5), label='Llama3', color='red')
     plt.plot(smoothing_average(eli5_chatGpt3.covariances, 5), label='GPT3', color='green')
     plt.title('Covariances')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Covariance')
     # plt.ylim(0.002, 0.005)
     plt.legend()
@@ -508,7 +508,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 1), label='Llama3', color='red')
     plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 1), label='GPT3', color='green')
     plt.title('Variance of Cosine Similarities')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
     plt.ylim(0.015, 0.035)
     plt.legend()
@@ -526,7 +526,7 @@ def create_openqa_plots():
     plt.plot(smoothing_average(openqa_human.distances, 10), label='Human - Smoothed Average', color='blue')
     plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='green')
     plt.title('Avg. Euclidean Distance')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Average Distance')
     # plt.ylim(2.8, 3.4)
     plt.xlim(0, 100)
@@ -537,7 +537,7 @@ def create_openqa_plots():
     plt.plot(smoothing_average(openqa_human.covariances, 5), label='Human', color='blue')
     plt.plot(smoothing_average(openqa_chatGpt3.covariances, 5), label='GPT3', color='green')
     plt.title('Covariances')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
     plt.legend()
     plt.grid(True)
