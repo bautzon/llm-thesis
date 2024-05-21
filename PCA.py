@@ -1,16 +1,8 @@
-import os
-import re
-import numpy as np
-import json
-import random
 import matplotlib.pyplot as plt
-from math import dist
 from gensim.models import KeyedVectors
-from sklearn.metrics.pairwise import euclidean_distances, cosine_similarity
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from scipy.spatial.distance import cosine, euclidean
-from DistanceMatrix import get_openqa_calculations, get_eli5_calculations, get_prompt1_calculations, get_prompt2_calculations, CalculationsObject
+from DistanceMatrix import get_openqa_calculations, get_eli5_calculations, get_prompt1_calculations, get_prompt2_calculations
 import pandas as pd
 
 
@@ -45,16 +37,16 @@ pca = PCA(n_components=3)
 
 principalComponents = pca.fit_transform(features_standardized)
 
-principalDf = pd.DataFrame(data = principalComponents, columns = ['principal component 1', 'principal component 2', 'principal component 3'])
+principalDf = pd.DataFrame(data=principalComponents, columns=['principal component 1', 'principal component 2', 'principal component 3'])
 
-finalDf = pd.concat([principalDf, target], axis = 1)
+finalDf = pd.concat([principalDf, target], axis=1)
 
-fig = plt.figure(2, figsize = (8,8))
+fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, projection='3d')
-ax.set_xlabel('Principal Component 1', fontsize = 15)
-ax.set_ylabel('Principal Component 2', fontsize = 15)
-ax.set_zlabel('Principal Component 3', fontsize = 15)
-ax.set_title('3 component PCA', fontsize = 20)
+ax.set_xlabel('Principal Component 1', fontsize=15)
+ax.set_ylabel('Principal Component 2', fontsize=15)
+ax.set_zlabel('Principal Component 3', fontsize=15)
+ax.set_title('3 component PCA', fontsize=20)
 
 targets = ['human', 'ai']
 
@@ -62,10 +54,7 @@ colors = ['blue', 'g']
 
 for target, color in zip(targets, colors):
     indicesToKeep = finalDf['creator'] == target
-    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-               , finalDf.loc[indicesToKeep, 'principal component 2']
-               , c = color
-               , s = 50)
+    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1'], finalDf.loc[indicesToKeep, 'principal component 2'], c=color, s=50)
 ax.legend(targets)
 ax.grid()
 
