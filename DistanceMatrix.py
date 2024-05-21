@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = False
+GENERATE_NEW_DATA = True
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
@@ -220,8 +220,10 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
                 i += 1
             else:
                 skip_increment = False
-
-        covariances_per_answer.append(np.mean(covariances))
+        if covariances:
+            covariances_per_answer.append(np.mean(covariances))
+        else:
+            covariances_per_answer.append(np.nan)
         cosine_variance_per_answer.append(np.mean(cosine_variance_list))
 
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, cosine_variance_per_answer, word_embeddings
@@ -559,7 +561,7 @@ def create_openqa_plots():
     plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='green')
     plt.plot(smoothing_average(openqa_chatGpt4.cosine_variance_list, 1), label='GPT4', color='orange')
     plt.title('Variance of Cosine Similarities')
-    plt.xlabel('Number of Answers')
+    plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
     plt.legend()
     plt.grid(True)
