@@ -9,7 +9,7 @@ from scipy.spatial.distance import cosine  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = True
+GENERATE_NEW_DATA = False
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
@@ -224,6 +224,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
             covariances_per_answer.append(np.mean(covariances))
         else:
             covariances_per_answer.append(np.nan)
+            print(f"Error calculating covariances for answer: {answer_text}")
         cosine_variance_per_answer.append(np.mean(cosine_variance_list))
 
     return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, cosine_variance_per_answer, word_embeddings
@@ -571,14 +572,14 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    # create_prompt1_plots()
+    create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
     # create_prompt2_plots()
 
     # create_eli5_plots()
 
-    create_openqa_plots()
+    # create_openqa_plots()
 
     plt.show()  # Needed in the end to show the plots
 
