@@ -37,11 +37,18 @@ human_creator = ['human'] * 200
 # })
 
 essay_dataFrame = pd.DataFrame({
-    "distance": eli5_distances + openqa_distances + eli5_human.distances + openqa_human.distances,
-    "covariance": eli5_covariances + openqa_covariances + eli5_human.covariances + openqa_human.covariances,
-    "cosine variance": eli5_cosine_variance + openqa_cosine_variance + eli5_human.cosine_variance_per_answer + openqa_human.cosine_variance_per_answer,
-    "creator": ['ai'] * 800 + ['human'] * 200
+    "distance": openqa_distances + openqa_human.distances,
+    "covariance": openqa_covariances + openqa_human.covariances,
+    "cosine variance": openqa_cosine_variance + openqa_human.cosine_variance_per_answer,
+    "creator": ['ai'] * 400 + ['human'] * 100
 })
+
+# essay_dataFrame = pd.DataFrame({
+#     "distance": eli5_distances + eli5_human.distances,
+#     "covariance": eli5_covariances + eli5_human.covariances,
+#     "cosine variance": eli5_cosine_variance + eli5_human.cosine_variance_per_answer,
+#     "creator": ['ai'] * 400 + ['human'] * 100
+# })
 
 features = essay_dataFrame[['distance', 'covariance', 'cosine variance']]
 
