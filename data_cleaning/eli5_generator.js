@@ -59,7 +59,7 @@ fs.readFile('eli5_llama2.json', 'utf8', (err, data) => {
                     creator: "ai",
                     prompt: answer.prompt,
                     llama2: answer.llama2,
-                    llama3: response,
+                    llama3: answer.llama3,
                     chatGpt3: answer.chatGpt3,
                     chatGpt4: response.choices[0].message.content.replace(/\n/g, " "),
                     human: answer.human
