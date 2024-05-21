@@ -16,7 +16,7 @@ function executeCommand(command) {
     });
 }
 
-fs.readFile('open_qa_cleaned.json', 'utf8', (err, data) => {
+fs.readFile('open_qa_plus.json', 'utf8', (err, data) => {
     if (err) {
         console.error('Error reading file:', err);
         return;
@@ -32,19 +32,19 @@ fs.readFile('open_qa_cleaned.json', 'utf8', (err, data) => {
             for (let i = startIndex; i < answers.length; i++) {
                 let answer = answers[i];
                 const question = answer.prompt;
-                // const final_question = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>{${question}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
-                const command = `../llama.cpp/main -m ../llama.cpp/models/llama-2-13b-chat.Q5_K_M.gguf -p "${question}" --log-disable`;
-                // const command = `../llama.cpp/main -m ../llama.cpp/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf -p "${final_question}" --log-disable -c 2048`;
+                const final_question = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>{${question}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+                // const command = `../llama.cpp/main -m ../llama.cpp/models/llama-2-13b-chat.Q5_K_M.gguf -p "${question}" --log-disable`;
+                const command = `../llama.cpp/main -m ../llama.cpp/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf -p "${final_question}" --log-disable -c 2048`;
                 let response = await executeCommand(command);
-                response = response.replace(`<s> ${question}`, '').replace("</s>", '').replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').replace(/\n/g, '').replace(/(\S)?\\\"/g, "").trim();
-                // response = response.replace(regex, '').replace("<|eot_id|>", "").replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').replace(/\n/g, '').replace(/(\S)?\\\"/g, "").trim();
+                // response = response.replace(`<s> ${question}`, '').replace("</s>", '').replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').replace(/\n/g, '').replace(/(\S)?\\\"/g, "").trim();
+                response = response.replace(eli5_regex, '').replace("<|eot_id|>", "").replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').replace(/\n/g, '').replace(/(\S)?\\\"/g, "").trim();
 
                 const entryObj = {
                     id: answer.id,
                     creator: "ai",
                     prompt: answer.prompt,
-                    llama2: response,
-                    // llama3: answer.llama3,
+                    llama2: answer.llama2,
+                    llama3: response,
                     chatGpt3: answer.chatGpt3,
                     human: answer.human
                 };
