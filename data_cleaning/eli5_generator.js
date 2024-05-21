@@ -31,7 +31,7 @@ async function generateGpt(question) {
     return completion;
 }
 
-fs.readFile('open_qa_plus.json', 'utf8', (err, data) => {
+fs.readFile('eli5_llama2.json', 'utf8', (err, data) => {
     if (err) {
         console.error('Error reading file:', err);
         return;
@@ -41,7 +41,7 @@ fs.readFile('open_qa_plus.json', 'utf8', (err, data) => {
         const jsonData = JSON.parse(data);
         const answers = jsonData.Answers;
         let extractedData = [];
-        let startIndex = 90;
+        let startIndex = 80;
         let llama3_regex = /<\|begin_of_text\|><\|begin_of_text\|><\|start_header_id\|>system[\s\S]*?assistant<\|end_header_id\|>/g;
         (async () => {
             for (let i = startIndex; i < answers.length; i++) {
@@ -67,9 +67,9 @@ fs.readFile('open_qa_plus.json', 'utf8', (err, data) => {
 
                 extractedData.push(entryObj);
                 console.log(entryObj);
-                if (i >= startIndex + 9) break;
+                if (i >= startIndex + 19) break;
             }
-            const outputFile = "openqa_llama2.json";
+            const outputFile = "eli5_gpt4.json";
             const dataObject = { "Answers": extractedData };
             fs.writeFileSync(outputFile, JSON.stringify(dataObject, null, 2));
         })();
