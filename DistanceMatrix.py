@@ -257,8 +257,7 @@ def get_prompt1_calculations():
     prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', llama3_prompt1_json_data))
     prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
     prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
-    prompt1_gpt3_humanlike = CalculationsObject(
-        *calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
+    prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
     prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
 
     # Save the data to a file
@@ -332,10 +331,11 @@ def get_eli5_calculations():
     eli5_llama2 = CalculationsObject(*calculate_distance_and_more('llama2', eli5_json_data, True))
     eli5_llama3 = CalculationsObject(*calculate_distance_and_more('llama3', eli5_json_data, True))
     eli5_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', eli5_json_data, True))
+    eli5_chatGpt4 = CalculationsObject(*calculate_distance_and_more('chatGpt4', eli5_json_data, True))
 
     # Save the data to a file
     with open(data_file, "wb") as file:
-        data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3)
+        data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3, eli5_chatGpt4)
         pickle.dump(data, file)
 
     return data
@@ -356,13 +356,14 @@ def get_openqa_calculations():
     openqa_json_data = read_json_file('Test-Data/open_qa.json')
 
     openqa_human = CalculationsObject(*calculate_distance_and_more('human', openqa_json_data, True))
-    # openqa_llama2 = CalculationsObject(*calculate_openqa_distances_and_more('llama2', openqa_json_data))
-    # openqa_llama3 = CalculationsObject(*calculate_openqa_distances_and_more('llama3', openqa_json_data))
+    openqa_llama2 = CalculationsObject(*calculate_distance_and_more('llama2', openqa_json_data, True))
+    openqa_llama3 = CalculationsObject(*calculate_distance_and_more('llama3', openqa_json_data, True))
     openqa_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', openqa_json_data, True))
+    openqa_chatGpt4 = CalculationsObject(*calculate_distance_and_more('chatGpt4', openqa_json_data, True))
 
     # Save the data to a file
     with open(data_file, "wb") as file:
-        data = (openqa_human, openqa_chatGpt3)
+        data = (openqa_human, openqa_llama2, openqa_llama3, openqa_chatGpt3, openqa_chatGpt4)
         pickle.dump(data, file)
 
     return data
@@ -473,15 +474,16 @@ def create_prompt2_plots():
 
 
 def create_eli5_plots():
-    eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = get_eli5_calculations()
+    eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3, eli5_chatGpt4 = get_eli5_calculations()
 
     plt.figure(3, figsize=(20, 8))
     plt.suptitle("ELI5")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(eli5_human.distances, 10), label='Human - Smoothed Average', color='blue')
-    plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2 - Smoothed Average', color='black')
-    plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3 - Smoothed Average', color='red')
-    plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='green')
+    plt.plot(smoothing_average(eli5_human.distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2', color='black')
+    plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3', color='red')
+    plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.distances, 10), label='GPT4', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -495,6 +497,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama2.covariances, 5), label='Llama2', color='black')
     plt.plot(smoothing_average(eli5_llama3.covariances, 5), label='Llama3', color='red')
     plt.plot(smoothing_average(eli5_chatGpt3.covariances, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.covariances, 5), label='GPT4', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Covariance')
@@ -503,14 +506,15 @@ def create_eli5_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(eli5_human.cosine_variance_list, 1), label='Human', color='blue')
-    plt.plot(smoothing_average(eli5_llama2.cosine_variance_list, 1), label='Llama2', color='black')
-    plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 1), label='Llama3', color='red')
-    plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 1), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_human.cosine_variance_list, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(eli5_llama2.cosine_variance_list, 5), label='Llama2', color='black')
+    plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 5), label='Llama3', color='red')
+    plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.cosine_variance_list, 5), label='GPT4', color='orange')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
-    plt.ylim(0.015, 0.035)
+    # plt.ylim(0.015, 0.035)
     plt.legend()
     plt.grid(True)
 
@@ -518,13 +522,16 @@ def create_eli5_plots():
 
 
 def create_openqa_plots():
-    openqa_human, openqa_chatGpt3 = get_openqa_calculations()
+    openqa_human, openqa_llama2, openqa_llama3, openqa_chatGpt3, openqa_chatGpt4 = get_openqa_calculations()
 
     plt.figure(4, figsize=(20, 8))
     plt.suptitle("OpenQA")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human - Smoothed Average', color='blue')
-    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3 - Smoothed Average', color='green')
+    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.distances, 10), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.distances, 10), label='Llama3', color='red')
+    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.distances, 10), label='GPT4', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -535,7 +542,10 @@ def create_openqa_plots():
 
     plt.subplot(1, 3, 2)
     plt.plot(smoothing_average(openqa_human.covariances, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.covariances, 5), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.covariances, 5), label='Llama3', color='red')
     plt.plot(smoothing_average(openqa_chatGpt3.covariances, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.covariances, 5), label='GPT4', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
@@ -544,7 +554,10 @@ def create_openqa_plots():
 
     plt.subplot(1, 3, 3)
     plt.plot(smoothing_average(openqa_human.cosine_variance_list, 1), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.cosine_variance_list, 1), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.cosine_variance_list, 1), label='Llama3', color='red')
     plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.cosine_variance_list, 1), label='GPT4', color='orange')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Number of Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
@@ -556,14 +569,14 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    create_prompt1_plots()
+    # create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
     # create_prompt2_plots()
 
     # create_eli5_plots()
 
-    # create_openqa_plots()
+    create_openqa_plots()
 
     plt.show()  # Needed in the end to show the plots
 
