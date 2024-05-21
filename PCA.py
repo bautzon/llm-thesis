@@ -21,8 +21,8 @@ MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300
 
 prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = get_prompt1_calculations()
 prompt2_human, prompt2_llama2_student, prompt2_llama3_student, prompt2_gpt3_student, prompt2_gpt3_plain, prompt2_gpt3_humanlike, prompt2_gpt4_student = get_prompt2_calculations()
-eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3 = get_eli5_calculations()
-openqa_human, openqa_chatGpt3 = get_openqa_calculations()
+eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3, eli5_chatGpt4 = get_eli5_calculations()
+openqa_human, openqa_llama2, openqa_llama3, openqa_chatGpt3, openqa_chatGpt4 = get_openqa_calculations()
 
 human_creator = ['human'] * len(prompt1_human.distances)
 ai_creator = ['ai'] * len(prompt1_llama2_student.distances)
