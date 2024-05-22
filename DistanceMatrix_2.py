@@ -1,8 +1,6 @@
 import os
 import pickle
 import json
-import time
-
 import numpy as np
 import matplotlib.pyplot as plt
 from gensim.models import KeyedVectors
@@ -10,10 +8,8 @@ from scipy.spatial.distance import cosine, euclidean  # Import the cosine functi
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = False
+GENERATE_NEW_DATA = True
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
-
-
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
 
@@ -25,16 +21,13 @@ class CalculationsObject:
     """
 
     def __init__(self, model_name, json_data, is_eli5=False):
-
         self.json_data = json_data
         self.model_name = model_name
         self.is_eli5 = is_eli5
-        self.avg_len_list = []
-        self.vector_list = []
         self.cosine_list = []
         self.cosine_variance_list = []
         self.mean_cosine_variance = []
-        self.distances = []
+        self.mean_distances = []
         self.covariances = []
         self.mean_covariances = []
         self.word_embeddings = []
@@ -51,12 +44,11 @@ class CalculationsObject:
 
             words = answer_text.split()
             # Calculate distances
-            dist = calculate_distances_for_text(answer_text)
-            if dist is not None:
-                self.distances.append(dist)
-
-
-            vector_norms = []
+            # dist = calculate_distances_for_text(answer_text)
+            # if dist is not None:
+            #     print(dist)
+            #     self.distances.append(dist)
+            distances = []
             covariances = []
             for i, current_word in enumerate(words):
                 if current_word not in MODEL:
@@ -72,39 +64,27 @@ class CalculationsObject:
 
                     next_word_embedding = MODEL[next_word]
 
-                    #print("Calculating vector norms")
-                    vector_norms_time = time.time()
-                    # THIS IS WEIRD
-                    #vector_norms.append(np.linalg.norm(current_word_embedding))
-                    #self.avg_len_list.append(np.mean(vector_norms))
-                    #print("Vector norms time: ", time.time() - vector_norms_time)
+                    dist = euclidean(current_word_embedding, next_word_embedding)
+                    distances.append(dist)
 
-                    #print("Calculating cosine similarities")
-                    cosine_time = time.time()
                     # Calculate vector distance and cosine similarity
-                    self.vector_list.append(euclidean(current_word_embedding, next_word_embedding))
-
-
-
                     similarity = cosine_similarity(current_word_embedding, next_word_embedding)
                     self.cosine_list.append(similarity)
-
-
 
                     # Calculate covariances
                     deviation_current_word = current_word_embedding - np.mean(current_word_embedding)
                     deviation_next_word = next_word_embedding - np.mean(next_word_embedding)
-
                     euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
                     covariances.append(euclid_covariance)
-                    #print("Covariance time: ", time.time() - co_time)
 
-            print("Calculating mean covariances")
             self.mean_covariances.append(
                 np.mean(covariances)
             )
             self.mean_cosine_variance.append(
                 np.var(self.cosine_list)
+            )
+            self.mean_distances.append(
+                np.mean(distances)
             )
 
 
@@ -351,11 +331,11 @@ def create_prompt1_plots():
     plt.figure(1, figsize=(20, 8))
     plt.suptitle("Prompt 1")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(prompt1_human.distances, 10), label='Human', color='blue')
-    plt.plot(smoothing_average(prompt1_llama2_student.distances, 10), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt1_llama3_student.distances, 10), label='Llama3 Student', color='red')
-    plt.plot(smoothing_average(prompt1_gpt3_student.distances, 10), label='GPT3 Student', color='green')
-    plt.plot(smoothing_average(prompt1_gpt4_student.distances, 10), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt1_human.mean_distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt1_llama2_student.mean_distances, 10), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.mean_distances, 10), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt1_gpt3_student.mean_distances, 10), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt1_gpt4_student.mean_distances, 10), label='GPT4 Student', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -402,11 +382,11 @@ def create_prompt2_plots():
     plt.figure(2, figsize=(20, 8))
     plt.suptitle("Prompt 2")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(prompt2_human.distances, 10), label='Human', color='blue')
-    plt.plot(smoothing_average(prompt2_llama2_student.distances, 10), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt2_llama3_student.distances, 10), label='Llama3 Student', color='red')
-    plt.plot(smoothing_average(prompt2_gpt3_student.distances, 10), label='GPT3 Student', color='green')
-    plt.plot(smoothing_average(prompt2_gpt4_student.distances, 10), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt2_human.mean_distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt2_llama2_student.mean_distances, 10), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt2_llama3_student.mean_distances, 10), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt2_gpt3_student.mean_distances, 10), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt2_gpt4_student.mean_distances, 10), label='GPT4 Student', color='orange')
 
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
@@ -417,11 +397,11 @@ def create_prompt2_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(prompt2_human.covariances, label='Human', color='blue')
-    plt.plot(prompt2_llama2_student.covariances, label='Llama2 Student', color='black')
-    plt.plot(prompt2_llama3_student.covariances, label='Llama3 Student', color='red')
-    plt.plot(prompt2_gpt3_student.covariances, label='GPT3 Student', color='green')
-    plt.plot(prompt2_gpt4_student.covariances, label='GPT4 Student', color='orange')
+    plt.plot(prompt2_human.mean_covariances, label='Human', color='blue')
+    plt.plot(prompt2_llama2_student.mean_covariances, label='Llama2 Student', color='black')
+    plt.plot(prompt2_llama3_student.mean_covariances, label='Llama3 Student', color='red')
+    plt.plot(prompt2_gpt3_student.mean_covariances, label='GPT3 Student', color='green')
+    plt.plot(prompt2_gpt4_student.mean_covariances, label='GPT4 Student', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
@@ -429,15 +409,15 @@ def create_prompt2_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(prompt2_human.cosine_variance_list, 1), label='Human', color='blue')
-    plt.plot(smoothing_average(prompt2_llama2_student.cosine_variance_list, 1), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt2_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='red')
-    plt.plot(smoothing_average(prompt2_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='green')
-    plt.plot(smoothing_average(prompt2_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt2_human.mean_cosine_variance, 1), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt2_llama2_student.mean_cosine_variance, 1), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt2_llama3_student.mean_cosine_variance, 1), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt2_gpt3_student.mean_cosine_variance, 1), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt2_gpt4_student.mean_cosine_variance, 1), label='GPT4 Student', color='orange')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
-    plt.ylim(0.01, 0.025)
+    # plt.ylim(0.01, 0.025)
     plt.legend()
     plt.grid(True)
 
@@ -450,11 +430,11 @@ def create_eli5_plots():
     plt.figure(3, figsize=(20, 8))
     plt.suptitle("ELI5")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(eli5_human.distances, 10), label='Human', color='blue')
-    plt.plot(smoothing_average(eli5_llama2.distances, 10), label='Llama2', color='black')
-    plt.plot(smoothing_average(eli5_llama3.distances, 10), label='Llama3', color='red')
-    plt.plot(smoothing_average(eli5_chatGpt3.distances, 10), label='GPT3', color='green')
-    plt.plot(smoothing_average(eli5_chatGpt4.distances, 10), label='GPT4', color='orange')
+    plt.plot(smoothing_average(eli5_human.mean_distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(eli5_llama2.mean_distances, 10), label='Llama2', color='black')
+    plt.plot(smoothing_average(eli5_llama3.mean_distances, 10), label='Llama3', color='red')
+    plt.plot(smoothing_average(eli5_chatGpt3.mean_distances, 10), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.mean_distances, 10), label='GPT4', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -498,11 +478,11 @@ def create_openqa_plots():
     plt.figure(4, figsize=(20, 8))
     plt.suptitle("OpenQA")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(openqa_human.distances, 10), label='Human', color='blue')
-    plt.plot(smoothing_average(openqa_llama2.distances, 10), label='Llama2', color='black')
-    plt.plot(smoothing_average(openqa_llama3.distances, 10), label='Llama3', color='red')
-    plt.plot(smoothing_average(openqa_chatGpt3.distances, 10), label='GPT3', color='green')
-    plt.plot(smoothing_average(openqa_chatGpt4.distances, 10), label='GPT4', color='orange')
+    plt.plot(smoothing_average(openqa_human.mean_distances, 10), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.mean_distances, 10), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.mean_distances, 10), label='Llama3', color='red')
+    plt.plot(smoothing_average(openqa_chatGpt3.mean_distances, 10), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.mean_distances, 10), label='GPT4', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -543,7 +523,7 @@ def main():
     create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
-    # create_prompt2_plots()
+    # reate_prompt2_plots()
 
     # create_eli5_plots()
 

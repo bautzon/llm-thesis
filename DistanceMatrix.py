@@ -227,7 +227,7 @@ def calculate_distance_and_more(model_name, json_data, is_eli5=False):
             print(f"Error calculating covariances for answer: {answer_text}")
         cosine_variance_per_answer.append(np.mean(cosine_variance_list))
 
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, cosine_variance_per_answer, word_embeddings
+    return avg_len_list, vector_list, cosine_list, cosine_variance_list, cosine_variance_per_answer, distances, covariances_per_answer, word_embeddings
 
 
 def get_prompt1_calculations():
