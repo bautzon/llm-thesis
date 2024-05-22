@@ -1,16 +1,19 @@
 import os
 import pickle
 import json
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 from gensim.models import KeyedVectors
-from scipy.spatial import distance  # Import the module
-from scipy.spatial.distance import cosine  # Import the cosine function directly
+from scipy.spatial.distance import cosine, euclidean  # Import the cosine function directly
 
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
-GENERATE_NEW_DATA = True
+GENERATE_NEW_DATA = False
 MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+
+
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
 # MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
 
@@ -21,46 +24,88 @@ class CalculationsObject:
     Contains all the data calculated for a model
     """
 
-    def __init__(self, avg_len_list,
-                 vector_list,
-                 cosine_list,
-                 cosine_variance_list,
-                 cosine_variance_per_answer,
-                 distances,
-                 covariances,
-                 word_embeddings):
+    def __init__(self, model_name, json_data, is_eli5=False):
 
-        self.avg_len_list = avg_len_list
-        self.vector_list = vector_list
-        self.cosine_list = cosine_list
-        self.cosine_variance_list = cosine_variance_list
-        self.cosine_variance_per_answer = cosine_variance_per_answer
-        self.distances = distances
-        self.covariances = covariances
-        self.word_embeddings = word_embeddings
-        self.derivatives = np.gradient(distances) if len(distances) > 1 else None
-        self.smooth_avg_list = smoothing_average(avg_len_list, 10)
+        self.json_data = json_data
+        self.model_name = model_name
+        self.is_eli5 = is_eli5
+        self.avg_len_list = []
+        self.vector_list = []
+        self.cosine_list = []
+        self.cosine_variance_list = []
+        self.mean_cosine_variance = []
+        self.distances = []
+        self.covariances = []
+        self.mean_covariances = []
+        self.word_embeddings = []
+        self.calculate_distance_and_more()
+
+    def calculate_distance_and_more(self):
+        for t, answer in enumerate(self.json_data):
+            if self.is_eli5:
+                answer_text = answer[self.model_name]
+            else:
+                if answer['creator'] != self.model_name:
+                    continue
+                answer_text = answer['answer']
+
+            words = answer_text.split()
+            # Calculate distances
+            dist = calculate_distances_for_text(answer_text)
+            if dist is not None:
+                self.distances.append(dist)
 
 
-# def create_large_distance_plot():
-#     plt.figure(figsize=(20, 8))
-#     plt.subplot(1, 1, 1)
-#     plt.plot(smoothing_average(prompt1_human.distances, 5), label='Human', color='b')
-#     # plt.plot(smoothing_average(prompt1_llama2.distances, 5), label='Llama2 Student', color='black')
-#     plt.plot(smoothing_average(prompt1_llama3_student.distances, 5), label='Llama3 Student', color='r')
-#     plt.plot(smoothing_average(prompt1_gpt3_student.distances, 5), label='GPT3 Student', color='g')
-#     plt.plot(smoothing_average(prompt1_gpt3_plain.distances, 5), label='GPT3 Plain', color='y')
-#     plt.plot(smoothing_average(prompt1_gpt3_humanlike.distances, 5), label='GPT3 Humanlike', color='purple')
-#     plt.plot(smoothing_average(prompt1_gpt4_student.distances, 5), label='GPT4 Student', color='orange')
-#     plt.title('Prompt 1 - Avg Euclidean Distances')
-#     plt.xlabel('Number of Answers')
-#     plt.ylabel('Average Distance')
-#     plt.ylim(2.6, 3.2)
-#     plt.xlim(0, 100)
-#     plt.legend()
-#     plt.grid(True)
-#     plt.tight_layout()
-#     plt.show()
+            vector_norms = []
+            covariances = []
+            for i, current_word in enumerate(words):
+                if current_word not in MODEL:
+                    continue
+
+                current_word_embedding = MODEL[current_word]
+                self.word_embeddings.append(current_word_embedding)
+
+                for j in range(i + 1, len(words)):
+                    next_word = words[j]
+                    if next_word not in MODEL:
+                        continue
+
+                    next_word_embedding = MODEL[next_word]
+
+                    #print("Calculating vector norms")
+                    vector_norms_time = time.time()
+                    # THIS IS WEIRD
+                    #vector_norms.append(np.linalg.norm(current_word_embedding))
+                    #self.avg_len_list.append(np.mean(vector_norms))
+                    #print("Vector norms time: ", time.time() - vector_norms_time)
+
+                    #print("Calculating cosine similarities")
+                    cosine_time = time.time()
+                    # Calculate vector distance and cosine similarity
+                    self.vector_list.append(euclidean(current_word_embedding, next_word_embedding))
+
+
+
+                    similarity = cosine_similarity(current_word_embedding, next_word_embedding)
+                    self.cosine_list.append(similarity)
+
+
+
+                    # Calculate covariances
+                    deviation_current_word = current_word_embedding - np.mean(current_word_embedding)
+                    deviation_next_word = next_word_embedding - np.mean(next_word_embedding)
+
+                    euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
+                    covariances.append(euclid_covariance)
+                    #print("Covariance time: ", time.time() - co_time)
+
+            print("Calculating mean covariances")
+            self.mean_covariances.append(
+                np.mean(covariances)
+            )
+            self.mean_cosine_variance.append(
+                np.var(self.cosine_list)
+            )
 
 
 def read_json_file(file_path):
@@ -76,15 +121,12 @@ def read_json_file(file_path):
         return []
 
 
-def generate_word_pairs(text):
+def calculate_distances_for_text(text):
     words = text.split()
-    return [(words[i], words[i + 1]) for i in range(len(words) - 1)]
+    word_pairs = [(words[i], words[i + 1]) for i in range(len(words) - 1)]
 
-
-def calculate_distances_for_text(text, input_model):
-    word_pairs = generate_word_pairs(text)
-    distances = [distance.euclidean(input_model[word1], input_model[word2])
-                 for word1, word2 in word_pairs if word1 in input_model and word2 in input_model]
+    distances = [euclidean(MODEL[word1], MODEL[word2])
+                 for word1, word2 in word_pairs if word1 in MODEL and word2 in MODEL]
     if distances:
         return np.mean(distances)
     return None
@@ -130,7 +172,7 @@ def get_word_embedding(token, input_model):
 
 def calculate_distance(current_word, previous_word):
     if previous_word in MODEL and current_word in MODEL:
-        return distance.euclidean(MODEL[previous_word], MODEL[current_word])
+        return euclidean(MODEL[previous_word], MODEL[current_word])
     else:
         return None
 
@@ -154,80 +196,6 @@ def smoothing_average(values, window_size):
     # weights = np.repeat(1.0, window_size) / window_size
     # sma = np.convolve(values , weights, 'valid')
     return result
-
-
-def calculate_distance_and_more(model_name, json_data, is_eli5=False):
-    avg_len_list = []
-    vector_list = []
-    cosine_list = []
-    cosine_variance_list = []
-    distances = []
-    covariances_per_answer = []
-    cosine_variance_per_answer = []
-    word_embeddings = []
-
-    for answer in json_data:
-        if is_eli5:
-            answer_text = answer[model_name]
-        else:
-            if answer['creator'] != model_name:
-                continue
-            answer_text = answer['answer']
-
-        words = answer_text.split()
-
-        # Calculate distances
-        dist = calculate_distances_for_text(answer_text, MODEL)
-        if dist is not None:
-            distances.append(dist)
-
-        vector_norms = []
-        i = 0
-        skip_increment = False
-        covariances = []
-        while i < len(words) - 1:
-            current_word = words[i]
-            if current_word in MODEL:
-                word_embeddings.append(MODEL[current_word])
-                for j in range(i + 1, len(words)):
-                    next_word = words[j]
-                    if next_word in MODEL:
-                        vector_norms.append(np.linalg.norm(MODEL[current_word]))
-
-                        # Calculate vector distance and cosine similarity
-                        vector_list.append(distance.euclidean(MODEL[current_word], MODEL[next_word]))
-                        cosine_list.append(cosine_similarity(MODEL[current_word], MODEL[next_word]))
-
-                        # Calculate covariances
-                        current_word_embedding, next_word_embedding = MODEL[current_word], MODEL[next_word]
-                        mean_current_word, mean_next_word = np.mean(current_word_embedding), np.mean(
-                            next_word_embedding)
-                        deviation_current_word, deviation_next_word = current_word_embedding - mean_current_word, next_word_embedding - mean_next_word
-                        euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
-                        covariances.append(euclid_covariance)
-
-                        if cosine_list:
-                            variance = np.var(cosine_list)
-                            cosine_variance_list.append(variance)
-
-                        if vector_norms:
-                            avg_len_list.append(np.mean(vector_norms))
-
-                        i = j
-                        skip_increment = True
-                        break
-            if not skip_increment:
-                i += 1
-            else:
-                skip_increment = False
-        if covariances:
-            covariances_per_answer.append(np.mean(covariances))
-        else:
-            covariances_per_answer.append(np.nan)
-            print(f"Error calculating covariances for answer: {answer_text}")
-        cosine_variance_per_answer.append(np.mean(cosine_variance_list))
-
-    return avg_len_list, vector_list, cosine_list, cosine_variance_list, distances, covariances_per_answer, cosine_variance_per_answer, word_embeddings
 
 
 def get_prompt1_calculations():
@@ -255,13 +223,13 @@ def get_prompt1_calculations():
     prompt1_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt1_gpt3_humanlike.json')
     prompt1_chatGpt4_student_json_data = read_json_file('Test-Data/prompt1_gpt4_student.json')
 
-    prompt1_human = CalculationsObject(*calculate_distance_and_more('human', prompt1_llama3_student_json_data))
-    prompt1_llama2_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_llama2_student_json_data))
-    prompt1_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_llama3_student_json_data))
-    prompt1_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_student_json_data))
-    prompt1_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_plain_json_data))
-    prompt1_gpt3_humanlike = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt3_humanlike_json_data))
-    prompt1_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt1_chatGpt4_student_json_data))
+    prompt1_human = CalculationsObject('human', prompt1_llama3_student_json_data)
+    prompt1_llama2_student = CalculationsObject('ai', prompt1_llama2_student_json_data)
+    prompt1_llama3_student = CalculationsObject('ai', prompt1_llama3_student_json_data)
+    prompt1_gpt3_student = CalculationsObject('ai', prompt1_chatGpt3_student_json_data)
+    prompt1_gpt3_plain = CalculationsObject('ai', prompt1_chatGpt3_plain_json_data)
+    prompt1_gpt3_humanlike = CalculationsObject('ai', prompt1_chatGpt3_humanlike_json_data)
+    prompt1_gpt4_student = CalculationsObject('ai', prompt1_chatGpt4_student_json_data)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
@@ -298,14 +266,13 @@ def get_prompt2_calculations():
     prompt2_chatGpt3_humanlike_json_data = read_json_file('Test-Data/prompt2_gpt3_humanlike.json')
     prompt2_chatGpt4_student_json_data = read_json_file('Test-Data/prompt2_gpt4_student.json')
 
-    prompt2_human = CalculationsObject(*calculate_distance_and_more('human', prompt_2_human_answers_json_data))
-    prompt2_llama2_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama2_student_json_data))
-    prompt2_llama3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_llama3_json_data))
-    prompt2_gpt3_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_json_data))
-    prompt2_gpt3_plain = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt3_plain_json_data))
-    prompt2_gpt3_humanlike = CalculationsObject(
-        *calculate_distance_and_more('ai', prompt2_chatGpt3_humanlike_json_data))
-    prompt2_gpt4_student = CalculationsObject(*calculate_distance_and_more('ai', prompt2_chatGpt4_student_json_data))
+    prompt2_human = CalculationsObject('human', prompt_2_human_answers_json_data)
+    prompt2_llama2_student = CalculationsObject('ai', prompt2_llama2_student_json_data)
+    prompt2_llama3_student = CalculationsObject('ai', prompt2_llama3_json_data)
+    prompt2_gpt3_student = CalculationsObject('ai', prompt2_chatGpt3_json_data)
+    prompt2_gpt3_plain = CalculationsObject('ai', prompt2_chatGpt3_plain_json_data)
+    prompt2_gpt3_humanlike = CalculationsObject('ai', prompt2_chatGpt3_humanlike_json_data)
+    prompt2_gpt4_student = CalculationsObject('ai', prompt2_chatGpt4_student_json_data)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
@@ -330,11 +297,11 @@ def get_eli5_calculations():
 
     eli5_json_data = read_json_file('Test-Data/eli5_2.json')
 
-    eli5_human = CalculationsObject(*calculate_distance_and_more('human', eli5_json_data, True))
-    eli5_llama2 = CalculationsObject(*calculate_distance_and_more('llama2', eli5_json_data, True))
-    eli5_llama3 = CalculationsObject(*calculate_distance_and_more('llama3', eli5_json_data, True))
-    eli5_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', eli5_json_data, True))
-    eli5_chatGpt4 = CalculationsObject(*calculate_distance_and_more('chatGpt4', eli5_json_data, True))
+    eli5_human = CalculationsObject('human', eli5_json_data, True)
+    eli5_llama2 = CalculationsObject('llama2', eli5_json_data, True)
+    eli5_llama3 = CalculationsObject('llama3', eli5_json_data, True)
+    eli5_chatGpt3 = CalculationsObject('chatGpt3', eli5_json_data, True)
+    eli5_chatGpt4 = CalculationsObject('chatGpt4', eli5_json_data, True)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
@@ -358,11 +325,12 @@ def get_openqa_calculations():
 
     openqa_json_data = read_json_file('Test-Data/open_qa.json')
 
-    openqa_human = CalculationsObject(*calculate_distance_and_more('human', openqa_json_data, True))
-    openqa_llama2 = CalculationsObject(*calculate_distance_and_more('llama2', openqa_json_data, True))
-    openqa_llama3 = CalculationsObject(*calculate_distance_and_more('llama3', openqa_json_data, True))
-    openqa_chatGpt3 = CalculationsObject(*calculate_distance_and_more('chatGpt3', openqa_json_data, True))
-    openqa_chatGpt4 = CalculationsObject(*calculate_distance_and_more('chatGpt4', openqa_json_data, True))
+    openqa_human = CalculationsObject('human', openqa_json_data, True)
+    openqa_llama2 = CalculationsObject('llama2', openqa_json_data, True)
+    openqa_llama3 = CalculationsObject('llama3', openqa_json_data, True)
+    openqa_chatGpt3 = CalculationsObject('chatGpt3', openqa_json_data, True)
+
+    openqa_chatGpt4 = CalculationsObject('chatGpt4', openqa_json_data, True)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
@@ -397,11 +365,11 @@ def create_prompt1_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(prompt1_human.covariances, label='Human', color='blue')
-    plt.plot(prompt1_llama2_student.covariances, label='Llama2 Student', color='black')
-    plt.plot(prompt1_llama3_student.covariances, label='Llama3 Student', color='red')
-    plt.plot(prompt1_gpt3_student.covariances, label='GPT3 Student', color='green')
-    plt.plot(prompt1_gpt4_student.covariances, label='GPT4 Student', color='orange')
+    plt.plot(prompt1_human.mean_covariances, label='Human', color='blue')
+    plt.plot(prompt1_llama2_student.mean_covariances, label='Llama2 Student', color='black')
+    plt.plot(prompt1_llama3_student.mean_covariances, label='Llama3 Student', color='red')
+    plt.plot(prompt1_gpt3_student.mean_covariances, label='GPT3 Student', color='green')
+    plt.plot(prompt1_gpt4_student.mean_covariances, label='GPT4 Student', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
@@ -409,15 +377,15 @@ def create_prompt1_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(prompt1_human.cosine_variance_list, 1), label='Human', color='blue')
-    plt.plot(smoothing_average(prompt1_llama2_student.cosine_variance_list, 1), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt1_llama3_student.cosine_variance_list, 1), label='Llama3 Student', color='red')
-    plt.plot(smoothing_average(prompt1_gpt3_student.cosine_variance_list, 1), label='GPT3 Student', color='green')
-    plt.plot(smoothing_average(prompt1_gpt4_student.cosine_variance_list, 1), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt1_human.mean_cosine_variance, 1), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt1_llama2_student.mean_cosine_variance, 1), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.mean_cosine_variance, 1), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt1_gpt3_student.mean_cosine_variance, 1), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt1_gpt4_student.mean_cosine_variance, 1), label='GPT4 Student', color='orange')
     plt.title('Cosine variance')
-    plt.xlabel('Tokens')
+    plt.xlabel('Answers')
     plt.ylabel('Variance of Cosine Similarities')
-    plt.ylim(0.011, 0.022)
+    # plt.ylim(0.011, 0.022)
     plt.legend()
     plt.grid(True)
 

@@ -12,8 +12,8 @@ openqa_human, openqa_llama2, openqa_llama3, openqa_chatGpt3, openqa_chatGpt4 = g
 
 def calculate_metrics(*students):
     distances = [distance for student in students for distance in student.distances]
-    covariances = [covariance for student in students for covariance in student.covariances]
-    cosine_variance = [cosine_var for student in students for cosine_var in student.cosine_variance_per_answer]
+    covariances = [covariance for student in students for covariance in student.mean_covariances]
+    cosine_variance = [cosine_var for student in students for cosine_var in student.mean_cosine_variance]
     return distances, covariances, cosine_variance
 
 
@@ -39,7 +39,7 @@ human_creator = ['human'] * 200
 essay_dataFrame = pd.DataFrame({
     "distance": openqa_distances + openqa_human.distances,
     "covariance": openqa_covariances + openqa_human.covariances,
-    "cosine variance": openqa_cosine_variance + openqa_human.cosine_variance_per_answer,
+    "cosine variance": openqa_cosine_variance + openqa_human.mean_cosine_variance,
     "creator": ['ai'] * 400 + ['human'] * 100
 })
 
