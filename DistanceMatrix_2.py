@@ -76,6 +76,7 @@ class CalculationsObject:
                     deviation_next_word = next_word_embedding - np.mean(next_word_embedding)
                     euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
                     covariances.append(euclid_covariance)
+                    break
 
             self.mean_covariances.append(
                 np.mean(covariances)
@@ -444,11 +445,11 @@ def create_eli5_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(smoothing_average(eli5_human.covariances, 5), label='Human', color='blue')
-    plt.plot(smoothing_average(eli5_llama2.covariances, 5), label='Llama2', color='black')
-    plt.plot(smoothing_average(eli5_llama3.covariances, 5), label='Llama3', color='red')
-    plt.plot(smoothing_average(eli5_chatGpt3.covariances, 5), label='GPT3', color='green')
-    plt.plot(smoothing_average(eli5_chatGpt4.covariances, 5), label='GPT4', color='orange')
+    plt.plot(smoothing_average(eli5_human.mean_covariances, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(eli5_llama2.mean_covariances, 5), label='Llama2', color='black')
+    plt.plot(smoothing_average(eli5_llama3.mean_covariances, 5), label='Llama3', color='red')
+    plt.plot(smoothing_average(eli5_chatGpt3.mean_covariances, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.mean_covariances, 5), label='GPT4', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Covariance')
@@ -457,11 +458,11 @@ def create_eli5_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(eli5_human.cosine_variance_list, 5), label='Human', color='blue')
-    plt.plot(smoothing_average(eli5_llama2.cosine_variance_list, 5), label='Llama2', color='black')
-    plt.plot(smoothing_average(eli5_llama3.cosine_variance_list, 5), label='Llama3', color='red')
-    plt.plot(smoothing_average(eli5_chatGpt3.cosine_variance_list, 5), label='GPT3', color='green')
-    plt.plot(smoothing_average(eli5_chatGpt4.cosine_variance_list, 5), label='GPT4', color='orange')
+    plt.plot(smoothing_average(eli5_human.mean_cosine_variance, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(eli5_llama2.mean_cosine_variance, 5), label='Llama2', color='black')
+    plt.plot(smoothing_average(eli5_llama3.mean_cosine_variance, 5), label='Llama3', color='red')
+    plt.plot(smoothing_average(eli5_chatGpt3.mean_cosine_variance, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(eli5_chatGpt4.mean_cosine_variance, 5), label='GPT4', color='orange')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
@@ -492,11 +493,11 @@ def create_openqa_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 2)
-    plt.plot(smoothing_average(openqa_human.covariances, 5), label='Human', color='blue')
-    plt.plot(smoothing_average(openqa_llama2.covariances, 5), label='Llama2', color='black')
-    plt.plot(smoothing_average(openqa_llama3.covariances, 5), label='Llama3', color='red')
-    plt.plot(smoothing_average(openqa_chatGpt3.covariances, 5), label='GPT3', color='green')
-    plt.plot(smoothing_average(openqa_chatGpt4.covariances, 5), label='GPT4', color='orange')
+    plt.plot(smoothing_average(openqa_human.mean_covariances, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.mean_covariances, 5), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.mean_covariances, 5), label='Llama3', color='red')
+    plt.plot(smoothing_average(openqa_chatGpt3.mean_covariances, 5), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.mean_covariances, 5), label='GPT4', color='orange')
     plt.title('Covariances')
     plt.xlabel('Answers')
     plt.ylabel('Cosine Similarity')
@@ -504,11 +505,11 @@ def create_openqa_plots():
     plt.grid(True)
 
     plt.subplot(1, 3, 3)
-    plt.plot(smoothing_average(openqa_human.cosine_variance_list, 1), label='Human', color='blue')
-    plt.plot(smoothing_average(openqa_llama2.cosine_variance_list, 1), label='Llama2', color='black')
-    plt.plot(smoothing_average(openqa_llama3.cosine_variance_list, 1), label='Llama3', color='red')
-    plt.plot(smoothing_average(openqa_chatGpt3.cosine_variance_list, 1), label='GPT3', color='green')
-    plt.plot(smoothing_average(openqa_chatGpt4.cosine_variance_list, 1), label='GPT4', color='orange')
+    plt.plot(smoothing_average(openqa_human.mean_cosine_variance, 1), label='Human', color='blue')
+    plt.plot(smoothing_average(openqa_llama2.mean_cosine_variance, 1), label='Llama2', color='black')
+    plt.plot(smoothing_average(openqa_llama3.mean_cosine_variance, 1), label='Llama3', color='red')
+    plt.plot(smoothing_average(openqa_chatGpt3.mean_cosine_variance, 1), label='GPT3', color='green')
+    plt.plot(smoothing_average(openqa_chatGpt4.mean_cosine_variance, 1), label='GPT4', color='orange')
     plt.title('Variance of Cosine Similarities')
     plt.xlabel('Answers')
     plt.ylabel('Avg. Squared difference between record and mean')
@@ -520,10 +521,10 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    create_prompt1_plots()
+    # create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
-    # reate_prompt2_plots()
+    create_prompt2_plots()
 
     # create_eli5_plots()
 

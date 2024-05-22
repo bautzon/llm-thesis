@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from DistanceMatrix import get_openqa_calculations, get_eli5_calculations, get_prompt1_calculations, get_prompt2_calculations
+from DistanceMatrix import get_openqa_calculations, get_eli5_calculations, get_prompt1_calculations, get_prompt2_calculations, CalculationsObject
 import pandas as pd
 
 prompt1_human, prompt1_llama2_student, prompt1_llama3_student, prompt1_gpt3_student, prompt1_gpt3_plain, prompt1_gpt3_humanlike, prompt1_gpt4_student = get_prompt1_calculations()
@@ -26,9 +26,9 @@ ai_creator = ['ai'] * 800
 human_creator = ['human'] * 200
 
 essay_dataFrame = pd.DataFrame({
-     "distance": prompt1_ai_distances + prompt2_ai_distances + prompt1_human.distances + prompt2_human.distances,
-     "covariance":prompt1_ai_covariances + prompt2_ai_covariances + prompt1_human.covariances + prompt2_human.covariances,
-     "cosine variance": prompt1_ai_cosine_variance + prompt2_ai_cosine_variance + prompt1_human.cosine_variance_per_answer + prompt2_human.cosine_variance_per_answer,
+     "distance": prompt1_ai_distances + prompt2_ai_distances + prompt1_human.mean_distances + prompt2_human.mean_distances,
+     "covariance":prompt1_ai_covariances + prompt2_ai_covariances + prompt1_human.mean_covariances + prompt2_human.mean_covariances,
+     "cosine variance": prompt1_ai_cosine_variance + prompt2_ai_cosine_variance + prompt1_human.mean_cosine_variance + prompt2_human.mean_cosine_variance,
      "creator": ai_creator + human_creator
 })
 
