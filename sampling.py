@@ -13,35 +13,35 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import json
 import pickle
+import os
 
-# Define the file path
-file_path = 'Test-Data/combined.json'
+# Define global parameters
+FILE_PATH = 'Test-Data/combined.json'
+MODEL_NAME = 'gpt2'
+TOP_K = 100
+TOP_P = 0.96
 
 # Define paths for pickle files
-human_ranks_path = 'human_ranks.pkl'
-synthetic_ranks_path = 'synthetic_ranks.pkl'
-human_probs_path = 'human_probs.pkl'
-synthetic_probs_path = 'synthetic_probs.pkl'
+PICKLE_DIR = 'pickles'
+HUMAN_RANKS_PATH = os.path.join(PICKLE_DIR, 'human_ranks.pkl')
+SYNTHETIC_RANKS_PATH = os.path.join(PICKLE_DIR, 'synthetic_ranks.pkl')
+HUMAN_PROBS_PATH = os.path.join(PICKLE_DIR, 'human_probs.pkl')
+SYNTHETIC_PROBS_PATH = os.path.join(PICKLE_DIR, 'synthetic_probs.pkl')
 
-# Read the JSON file
-with open(file_path, 'r') as file:
-    data = json.load(file)
+def read_json(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
-# Initialize the list to hold all human and synthetic answers
-human_answers = []
-synthetic_answers = []
+def save_to_pickle(data, file_path):
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'wb') as file:
+        pickle.dump(data, file)
 
-# Loop through each entry in the "Answers" list
-for entry in data['Answers']:
-    if entry['creator'] == 'human':
-        # Split the answer into words and append to human_answers
-        human_answer = entry['answer'].split()
-        human_answers.append(human_answer)
-    elif entry['creator'] == 'ai':  # Changed to 'elif' to avoid checking twice
-        synthetic_answer = entry['answer'].split()
-        synthetic_answers.append(synthetic_answer)
+def load_from_pickle(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
 
-def get_top_p_predictions(model, tokenizer, prompt, top_p=0.96, top_k=100):
+def get_top_p_predictions(model, tokenizer, prompt):
     inputs = tokenizer(prompt, return_tensors='pt')
     input_ids = inputs.input_ids
     attention_mask = inputs.attention_mask
@@ -55,7 +55,7 @@ def get_top_p_predictions(model, tokenizer, prompt, top_p=0.96, top_k=100):
     sorted_probs, sorted_indices = torch.sort(next_token_probs, descending=True)
     cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
 
-    top_p_index = (cumulative_probs > top_p).nonzero(as_tuple=True)
+    top_p_index = (cumulative_probs > TOP_P).nonzero(as_tuple=True)
     if len(top_p_index[0]) > 0:
         top_p_index = top_p_index[0][0]
         top_p_probs = sorted_probs[:top_p_index + 1]
@@ -68,7 +68,7 @@ def get_top_p_predictions(model, tokenizer, prompt, top_p=0.96, top_k=100):
 
     predictions.sort(key=lambda x: x[1], reverse=True)
 
-    return predictions[:top_k]
+    return predictions[:TOP_K]
 
 def get_word_rank(predictions, target_word):
     for rank, (word, prob) in enumerate(predictions, 1):
@@ -76,19 +76,19 @@ def get_word_rank(predictions, target_word):
             return rank, prob
     return None, None
 
-def collect_ranks_and_probs(word_list, model, tokenizer, top_p=0.96, top_k=100):
+def collect_ranks_and_probs(word_list, model, tokenizer):
     ranks = []
     probs = []
     for i in range(len(word_list) - 1):
         prompt = ' '.join(word_list[:i+1])
         next_word = word_list[i+1]
-        predictions = get_top_p_predictions(model, tokenizer, prompt, top_p, top_k)
+        predictions = get_top_p_predictions(model, tokenizer, prompt)
         rank, prob = get_word_rank(predictions, next_word)
         if rank is not None:
             ranks.append(rank)
             probs.append(prob)
         else:
-            ranks.append(top_k + 1)  # If not in top-p, assign a rank larger than top_k
+            ranks.append(TOP_K + 1)  # If not in top-p, assign a rank larger than top_k
             probs.append(0)
     return ranks, probs
 
@@ -133,45 +133,56 @@ def plot_histograms(human_rank_counts, synthetic_rank_counts, human_probs, synth
     plt.tight_layout()
     plt.show()
 
-def save_to_pickle(data, file_path):
-    with open(file_path, 'wb') as file:
-        pickle.dump(data, file)
+def main():
+    data = read_json(FILE_PATH)
 
-def load_from_pickle(file_path):
-    with open(file_path, 'rb') as file:
-        return pickle.load(file)
+    # Initialize the list to hold all human and synthetic answers
+    human_answers = []
+    synthetic_answers = []
 
-# Load the pre-trained model and tokenizer
-model_name = 'gpt2'
-model = GPT2LMHeadModel.from_pretrained(model_name)
-tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    # Loop through each entry in the "Answers" list
+    for entry in data['Answers']:
+        if entry['creator'] == 'human':
+            # Split the answer into words and append to human_answers
+            human_answer = entry['answer'].split()
+            human_answers.append(human_answer)
+        elif entry['creator'] == 'ai':  # Changed to 'elif' to avoid checking twice
+            synthetic_answer = entry['answer'].split()
+            synthetic_answers.append(synthetic_answer)
 
-# Check if pickled data exists
-try:
-    human_ranks = load_from_pickle(human_ranks_path)
-    synthetic_ranks = load_from_pickle(synthetic_ranks_path)
-    human_probs = load_from_pickle(human_probs_path)
-    synthetic_probs = load_from_pickle(synthetic_probs_path)
-    print("Loaded ranks and probabilities from pickle files.")
-except (FileNotFoundError, EOFError):
-    # Collect ranks and probabilities for human and synthetic answers
-    first_entry_hum = human_answers[0]
-    first_entry_syn = synthetic_answers[0]
+    # Load the pre-trained model and tokenizer
+    model = GPT2LMHeadModel.from_pretrained(MODEL_NAME)
+    tokenizer = GPT2Tokenizer.from_pretrained(MODEL_NAME)
 
-    human_ranks, human_probs = collect_ranks_and_probs(first_entry_hum, model, tokenizer)
-    synthetic_ranks, synthetic_probs = collect_ranks_and_probs(first_entry_syn, model, tokenizer)
+    # Check if pickled data exists
+    try:
+        human_ranks = load_from_pickle(HUMAN_RANKS_PATH)
+        synthetic_ranks = load_from_pickle(SYNTHETIC_RANKS_PATH)
+        human_probs = load_from_pickle(HUMAN_PROBS_PATH)
+        synthetic_probs = load_from_pickle(SYNTHETIC_PROBS_PATH)
+        print("Loaded ranks and probabilities from pickle files.")
+    except (FileNotFoundError, EOFError):
+        # Collect ranks and probabilities for human and synthetic answers
+        first_entry_hum = human_answers[0]
+        first_entry_syn = synthetic_answers[0]
 
-    # Save ranks and probabilities to pickle files
-    save_to_pickle(human_ranks, human_ranks_path)
-    save_to_pickle(synthetic_ranks, synthetic_ranks_path)
-    save_to_pickle(human_probs, human_probs_path)
-    save_to_pickle(synthetic_probs, synthetic_probs_path)
-    print("Computed and saved ranks and probabilities to pickle files.")
+        human_ranks, human_probs = collect_ranks_and_probs(first_entry_hum, model, tokenizer)
+        synthetic_ranks, synthetic_probs = collect_ranks_and_probs(first_entry_syn, model, tokenizer)
 
+        # Save ranks and probabilities to pickle files
+        save_to_pickle(human_ranks, HUMAN_RANKS_PATH)
+        save_to_pickle(synthetic_ranks, SYNTHETIC_RANKS_PATH)
+        save_to_pickle(human_probs, HUMAN_PROBS_PATH)
+        save_to_pickle(synthetic_probs, SYNTHETIC_PROBS_PATH)
+        print("Computed and saved ranks and probabilities to pickle files.")
 
-# Count rank occurrences in increments of 10
-human_rank_counts = count_all_rank_occurrences(human_ranks)
-synthetic_rank_counts = count_all_rank_occurrences(synthetic_ranks)
+ 
+    # Count rank occurrences in increments of 10
+    human_rank_counts = count_all_rank_occurrences(human_ranks)
+    synthetic_rank_counts = count_all_rank_occurrences(synthetic_ranks)
 
-# Plot histograms
-plot_histograms(human_rank_counts, synthetic_rank_counts, human_probs, synthetic_probs)
+    # Plot histograms
+    plot_histograms(human_rank_counts, synthetic_rank_counts, human_probs, synthetic_probs)
+
+if __name__ == "__main__":
+    main()
