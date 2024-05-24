@@ -25,6 +25,7 @@ class CalculationsObject:
         self.model_name = model_name
         self.is_eli5 = is_eli5
         self.cosine_similarity_list = []
+        self.mean_cosine_similarity = []
         self.mean_cosine_variance = []
         self.mean_distances = []
         self.covariances = []
@@ -78,6 +79,9 @@ class CalculationsObject:
                     self.cosine_similarity_list.append(similarity)
                     break
 
+            self.mean_cosine_similarity.append(
+                np.mean(self.cosine_similarity_list)
+            )
             self.mean_covariances.append(
                 np.mean(covariances)
             )
