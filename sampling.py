@@ -1,154 +1,31 @@
-"""https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277
+"""
+References:
+https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277
 https://huggingface.co/blog/how-to-generate
 https://colab.research.google.com/drive/1yeLM1LoaEqTAS6D_Op9_L2pLA06uUGW1#scrollTo=pfPQuW-2u-Ps
 https://gist.github.com/bsantraigi/5752667525d88d375207f099bd78818b
 https://colab.research.google.com/github/huggingface/blog/blob/main/notebooks/02_how_to_generate.ipynb#scrollTo=HhLKyfdbsjXc
-
 """
 
-
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import json
-import json
+import pickle
 
 # Define the file path
 file_path = 'Test-Data/combined.json'
+
+# Define paths for pickle files
+human_ranks_path = 'human_ranks.pkl'
+synthetic_ranks_path = 'synthetic_ranks.pkl'
 
 # Read the JSON file
 with open(file_path, 'r') as file:
     data = json.load(file)
 
-# Initialize the list to hold all human answers
-human_answers = []
-synthetic_answers=[]
-
-# Loop through each entry in the "Answers" list
-for entry in data['Answers']:
-    if entry['creator'] == 'human':
-        # Split the answer into words and append to human_answers
-        human_answer = entry['answer'].split()
-        human_answers.append(human_answer)
-    if entry['creator'] == 'ai':
-        synthetic_answer = entry['answer'].split()
-        synthetic_answers.append(synthetic_answer)
-
-
-def get_top_p_predictions(model, tokenizer, prompt, top_p=1.0, top_k=100):
-    inputs = tokenizer(prompt, return_tensors='pt')
-    input_ids = inputs.input_ids
-    attention_mask = inputs.attention_mask
-
-    with torch.no_grad():
-        outputs = model(input_ids, attention_mask=attention_mask)
-        next_token_logits = outputs.logits[:, -1, :]
-
-    next_token_probs = F.softmax(next_token_logits, dim=-1).squeeze()
-
-    sorted_probs, sorted_indices = torch.sort(next_token_probs, descending=True)
-    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
-
-    top_p_index = (cumulative_probs > top_p).nonzero(as_tuple=True)
-    if len(top_p_index[0]) > 0:
-        top_p_index = top_p_index[0][0]
-        top_p_probs = sorted_probs[:top_p_index + 1]
-        top_p_indices = sorted_indices[:top_p_index + 1]
-    else:
-        top_p_probs = sorted_probs
-        top_p_indices = sorted_indices
-
-    predictions = []
-    for prob, idx in zip(top_p_probs, top_p_indices):
-        word = tokenizer.decode(idx.item()).strip()
-        predictions.append((word, prob.item()))
-
-    predictions.sort(key=lambda x: x[1], reverse=True)
-
-    return predictions[:top_k]
-
-def get_word_rank(predictions, target_word):
-    for rank, (word, prob) in enumerate(predictions, 1):
-        if word == target_word:
-            return rank, prob
-    return None, None
-
-def plot_comparison(word_list1, word_list2, model, tokenizer, top_p=1.0, top_k=100):
-    def get_ranks_and_probs(word_list):
-        ranks = []
-        probs = []
-        for i in range(len(word_list) - 1):
-            prompt = ' '.join(word_list[:i+1])
-            next_word = word_list[i+1]
-            predictions = get_top_p_predictions(model, tokenizer, prompt, top_p, top_k)
-            rank, prob = get_word_rank(predictions, next_word)
-            if rank is not None:
-                ranks.append(rank)
-                probs.append(prob)
-            else:
-                ranks.append(top_k + 1)  # If not in top-p, assign a rank larger than top_k
-                probs.append(0)
-        return ranks, probs
-    
-    ranks1, probs1 = get_ranks_and_probs(word_list1)
-    ranks2, probs2 = get_ranks_and_probs(word_list2)
-    
-    x_labels = [f'Word {i}' for i in range(1, max(len(word_list1), len(word_list2)))]
-
-    plt.figure(figsize=(12, 6))
-    plt.plot(range(1, len(ranks1) + 1), ranks1, label='Rank of Next Word - Human', color='blue')
-    plt.plot(range(1, len(ranks2) + 1), ranks2, label='Rank of Next Word - Synthetic', color='red')
-    #plt.xticks(range(1, max(len(ranks1), len(ranks2)) + 1), x_labels, rotation=45)
-    plt.xlabel('Word in the List')
-    plt.ylabel('Rank')
-    plt.title('Comparison of Word Prediction Ranks')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-    plt.figure(figsize=(12, 6))
-    plt.plot(range(1, len(probs1) + 1), probs1, label='Probability of Next Word - Human', color='blue')
-    plt.plot(range(1, len(probs2) + 1), probs2, label='Probability of Next Word - Synthetic', color='red')
-    #plt.xticks(range(1, max(len(probs1), len(probs2)) + 1), x_labels, rotation=45)
-    plt.xlabel('Word in the List')
-    plt.ylabel('Probability')
-    plt.title('Comparison of Word Prediction Probabilities')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-# Load the pre-trained model and tokenizer
-model_name = 'gpt2'
-model = GPT2LMHeadModel.from_pretrained(model_name)
-tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-
-# Example usage
-word_list1 = ["The", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "dog"]
-word_list2 = ["A", "fast", "dark", "wolf", "leaped", "across", "a", "sleepy", "cat"]
-#plot_comparison(word_list1, word_list2, model, tokenizer)
-
-# Plot the comparison
-plot_comparison(human_answers[0], synthetic_answers[0], model, tokenizer)
-first_entry_hum = human_answers[0]
-first_entry_syn = synthetic_answers[0]
-plot_comparison(first_entry_hum, first_entry_syn, model, tokenizer)
-
-
-import torch
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-import json
-
-# Define the file path
-file_path = 'Test-Data/combined.json'
-
-# Read the JSON file
-with open(file_path, 'r') as file:
-    data = json.load(file)
-
-# Initialize the list to hold all human answers
+# Initialize the list to hold all human and synthetic answers
 human_answers = []
 synthetic_answers = []
 
@@ -158,11 +35,11 @@ for entry in data['Answers']:
         # Split the answer into words and append to human_answers
         human_answer = entry['answer'].split()
         human_answers.append(human_answer)
-    if entry['creator'] == 'ai':
+    elif entry['creator'] == 'ai':  # Changed to 'elif' to avoid checking twice
         synthetic_answer = entry['answer'].split()
         synthetic_answers.append(synthetic_answer)
 
-def get_top_p_predictions(model, tokenizer, prompt, top_p=1.0, top_k=100):
+def get_top_p_predictions(model, tokenizer, prompt, top_p=0.96, top_k=100):
     inputs = tokenizer(prompt, return_tensors='pt')
     input_ids = inputs.input_ids
     attention_mask = inputs.attention_mask
@@ -185,10 +62,7 @@ def get_top_p_predictions(model, tokenizer, prompt, top_p=1.0, top_k=100):
         top_p_probs = sorted_probs
         top_p_indices = sorted_indices
 
-    predictions = []
-    for prob, idx in zip(top_p_probs, top_p_indices):
-        word = tokenizer.decode(idx.item()).strip()
-        predictions.append((word, prob.item()))
+    predictions = [(tokenizer.decode(idx.item()).strip(), prob.item()) for prob, idx in zip(top_p_probs, top_p_indices)]
 
     predictions.sort(key=lambda x: x[1], reverse=True)
 
@@ -200,54 +74,84 @@ def get_word_rank(predictions, target_word):
             return rank, prob
     return None, None
 
-def plot_comparison(word_list1, word_list2, model, tokenizer, top_p=1.0, top_k=1000):
-    def get_ranks_and_probs(word_list):
-        ranks = []
-        probs = []
-        for i in range(len(word_list) - 1):
-            prompt = ' '.join(word_list[:i+1])
-            next_word = word_list[i+1]
-            predictions = get_top_p_predictions(model, tokenizer, prompt, top_p, top_k)
-            rank, prob = get_word_rank(predictions, next_word)
-            if rank is not None:
-                ranks.append(rank)
-                probs.append(prob)
-            else:
-                ranks.append(top_k + 1)  # If not in top-p, assign a rank larger than top_k
-                probs.append(0)
-        return ranks, probs
-    
-    ranks1, probs1 = get_ranks_and_probs(word_list1)
-    ranks2, probs2 = get_ranks_and_probs(word_list2)
-    
-    plt.figure(figsize=(12, 6))
-    plt.hist(ranks1, bins=2, alpha=0.5, label='Rank of Next Word - Human', color='b')
-    plt.hist(ranks2, bins=2, alpha=0.5, label='Rank of Next Word - Synthetic', color='r')
-    plt.xlabel('Rank')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Word Prediction Ranks')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
+def collect_ranks(word_list, model, tokenizer, top_p=0.96, top_k=100):
+    ranks = []
+    for i in range(len(word_list) - 1):
+        prompt = ' '.join(word_list[:i+1])
+        next_word = word_list[i+1]
+        predictions = get_top_p_predictions(model, tokenizer, prompt, top_p, top_k)
+        rank, _ = get_word_rank(predictions, next_word)
+        if rank is not None:
+            ranks.append(rank)
+        else:
+            ranks.append(top_k + 1)  # If not in top-p, assign a rank larger than top_k
+    return ranks
+
+def count_rank_occurrences_in_range(ranks, start, end):
+    return sum(1 for rank in ranks if start < rank <= end)
+
+def count_all_rank_occurrences(ranks, increment=10):
+    rank_counts = {}
+    for i in range(0, 100, increment):
+        start = i
+        end = i + increment
+        rank_counts[f'{start + 1}-{end}'] = count_rank_occurrences_in_range(ranks, start, end)
+    return rank_counts
+
+def plot_rank_count_graphs(human_rank_counts, synthetic_rank_counts):
+    labels = list(human_rank_counts.keys())
+    human_counts = list(human_rank_counts.values())
+    synthetic_counts = list(synthetic_rank_counts.values())
+
+    x = range(len(labels))
 
     plt.figure(figsize=(12, 6))
-    plt.hist(probs1, bins=2, alpha=0.5, label='Probability of Next Word - Human', color='b')
-    plt.hist(probs2, bins=2, alpha=0.5, label='Probability of Next Word - Synthetic', color='r')
-    plt.xlabel('Probability')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Word Prediction Probabilities')
+    plt.plot(x, human_counts, label='Human', color='blue', marker='o')
+    plt.plot(x, synthetic_counts, label='Synthetic', color='red', marker='x')
+    plt.xlabel('Rank Range')
+    plt.ylabel('Count')
+    plt.title('Count of Word Prediction Ranks in Ranges')
+    plt.xticks(x, labels, rotation=45)
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    
     plt.show()
+
+def save_to_pickle(data, file_path):
+    with open(file_path, 'wb') as file:
+        pickle.dump(data, file)
+
+def load_from_pickle(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
 
 # Load the pre-trained model and tokenizer
 model_name = 'gpt2'
 model = GPT2LMHeadModel.from_pretrained(model_name)
 tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 
-# Example usage
-first_entry_hum = human_answers[0]
-first_entry_syn = synthetic_answers[0]
-plot_comparison(first_entry_hum, first_entry_syn, model, tokenizer)
+# Check if pickled data exists
+try:
+    human_ranks = load_from_pickle(human_ranks_path)
+    synthetic_ranks = load_from_pickle(synthetic_ranks_path)
+    print("Loaded ranks from pickle files.")
+except (FileNotFoundError, EOFError):
+    # Collect ranks for human and synthetic answers
+    first_entry_hum = human_answers[0]
+    first_entry_syn = synthetic_answers[0]
+
+    human_ranks = collect_ranks(first_entry_hum, model, tokenizer)
+    synthetic_ranks = collect_ranks(first_entry_syn, model, tokenizer)
+
+    # Save ranks to pickle files
+    save_to_pickle(human_ranks, human_ranks_path)
+    save_to_pickle(synthetic_ranks, synthetic_ranks_path)
+    print("Computed and saved ranks to pickle files.")
+
+
+# Count rank occurrences in increments of 10
+human_rank_counts = count_all_rank_occurrences(human_ranks)
+synthetic_rank_counts = count_all_rank_occurrences(synthetic_ranks)
+
+# Plot rank count graphs
+plot_rank_count_graphs(human_rank_counts, synthetic_rank_counts)
