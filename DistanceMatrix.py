@@ -27,6 +27,7 @@ class CalculationsObject:
         self.cosine_similarity_list = []
         self.mean_cosine_similarity = []
         self.mean_cosine_variance = []
+        self.running_cosine_variance = []
         self.mean_distances = []
         self.covariances = []
         self.mean_covariances = []
@@ -77,6 +78,11 @@ class CalculationsObject:
                     # Calculate cosine similarity
                     similarity = cosine_similarity(current_word_embedding, next_word_embedding)
                     self.cosine_similarity_list.append(similarity)
+
+                    # running cosine variance
+                    self.running_cosine_variance.append(
+                        np.var(self.cosine_similarity_list)
+                    )
                     break
 
             self.mean_cosine_similarity.append(
@@ -336,11 +342,11 @@ def create_prompt1_plots():
     plt.figure(1, figsize=(20, 8))
     plt.suptitle("Prompt 1")
     plt.subplot(1, 3, 1)
-    plt.plot(smoothing_average(prompt1_human.mean_distances, 10), label='Human', color='blue')
-    plt.plot(smoothing_average(prompt1_llama2_student.mean_distances, 10), label='Llama2 Student', color='black')
-    plt.plot(smoothing_average(prompt1_llama3_student.mean_distances, 10), label='Llama3 Student', color='red')
-    plt.plot(smoothing_average(prompt1_gpt3_student.mean_distances, 10), label='GPT3 Student', color='green')
-    plt.plot(smoothing_average(prompt1_gpt4_student.mean_distances, 10), label='GPT4 Student', color='orange')
+    plt.plot(smoothing_average(prompt1_human.mean_cosine_similarity, 5), label='Human', color='blue')
+    plt.plot(smoothing_average(prompt1_llama2_student.mean_cosine_similarity, 5), label='Llama2 Student', color='black')
+    plt.plot(smoothing_average(prompt1_llama3_student.mean_cosine_similarity, 5), label='Llama3 Student', color='red')
+    plt.plot(smoothing_average(prompt1_gpt3_student.mean_cosine_similarity, 5), label='GPT3 Student', color='green')
+    plt.plot(smoothing_average(prompt1_gpt4_student.mean_cosine_similarity, 5), label='GPT4 Student', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
