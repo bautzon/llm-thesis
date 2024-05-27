@@ -53,7 +53,7 @@ target = essay_dataFrame['creator']
 scaler = StandardScaler()
 features_standardized = scaler.fit_transform(features)
 
-pca = PCA(n_components=3)
+pca = PCA(n_components=2)
 
 principalComponents = pca.fit_transform(features_standardized)
 

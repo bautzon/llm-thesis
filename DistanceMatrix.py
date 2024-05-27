@@ -9,17 +9,15 @@ from scipy.spatial.distance import cosine, euclidean  # Import the cosine functi
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
 GENERATE_NEW_DATA = True
-MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
-# MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
-# MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
-
+#MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+#MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M-subword.bin", binary=True)
+MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
 
 class CalculationsObject:
     """
-    Class to store the calculated data for each model
-    Contains all the data calculated for a model
+    Class to store the calculated data for each model.
+    Contains all the data calculated for a model.
     """
-
     def __init__(self, model_name, json_data, is_eli5=False):
         self.json_data = json_data
         self.model_name = model_name
@@ -30,6 +28,7 @@ class CalculationsObject:
         self.covariances = []
         self.mean_covariances = []
         self.word_embeddings = []
+        self.cosine_variance_per_answer = []
         self.calculate_distance_and_more()
 
     def calculate_distance_and_more(self):
@@ -42,13 +41,9 @@ class CalculationsObject:
                 answer_text = answer['answer']
 
             words = answer_text.split()
-            # Calculate distances
-            # dist = calculate_distances_for_text(answer_text)
-            # if dist is not None:
-            #     print(dist)
-            #     self.distances.append(dist)
             distances = []
             covariances = []
+            cosine_list = []
             for i, current_word in enumerate(words):
                 if current_word not in MODEL:
                     continue
@@ -63,30 +58,32 @@ class CalculationsObject:
 
                     next_word_embedding = MODEL[next_word]
 
-                    # Calculate distances
+                    # Calculate Euclidean distance
                     dist = euclidean(current_word_embedding, next_word_embedding)
                     distances.append(dist)
 
-                    # Calculate covariances
+                    # Calculate covariance
                     deviation_current_word = current_word_embedding - np.mean(current_word_embedding)
                     deviation_next_word = next_word_embedding - np.mean(next_word_embedding)
                     euclid_covariance = np.mean(deviation_current_word * deviation_next_word)
                     covariances.append(euclid_covariance)
 
                     # Calculate cosine similarity
-                    similarity = cosine_similarity(current_word_embedding, next_word_embedding)
-                    self.cosine_similarity_list.append(similarity)
+                    similarity = 1 - cosine(current_word_embedding, next_word_embedding)
+                    cosine_list.append(similarity)
                     break
 
-            self.mean_covariances.append(
-                np.mean(covariances)
-            )
-            self.mean_cosine_variance.append(
-                np.var(self.cosine_similarity_list)
-            )
-            self.mean_distances.append(
-                np.mean(distances)
-            )
+            self.mean_covariances.append(np.mean(covariances) if covariances else np.nan)
+            self.mean_distances.append(np.mean(distances) if distances else np.nan)
+            self.calculate_cosine_variance_per_answer(cosine_list)
+
+    def calculate_cosine_variance_per_answer(self, cosine_list):
+        if cosine_list:
+            variance = np.var(cosine_list)
+        else:
+            variance = np.nan  # Handle cases where there are no cosine values
+        self.cosine_variance_per_answer.append(variance)
+        self.mean_cosine_variance.append(variance)  # Also update the mean cosine variance for overall analysis
 
 
 def read_json_file(file_path):
@@ -129,6 +126,14 @@ def calculate_pairwise_cosine_similarities(words, input_model):
             similarities.append(sim)
 
     return similarities
+
+def calculate_cosine_variance_per_answer(cosine_list, cosine_variance_per_answer):
+    if cosine_list:
+        variance = np.var(cosine_list)
+        cosine_variance_per_answer.append(variance)
+    else:
+        cosine_variance_per_answer.append(np.nan)  # Handle cases where there are no cosine values
+
 
 
 def calculate_variance_of_cosine_similarities(text, input_model):
@@ -282,11 +287,11 @@ def get_eli5_calculations():
     eli5_llama2 = CalculationsObject('llama2', eli5_json_data, True)
     eli5_llama3 = CalculationsObject('llama3', eli5_json_data, True)
     eli5_chatGpt3 = CalculationsObject('chatGpt3', eli5_json_data, True)
-    eli5_chatGpt4 = CalculationsObject('chatGpt4', eli5_json_data, True)
+    #eli5_chatGpt4 = CalculationsObject('chatGpt4', eli5_json_data, True)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
-        data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3, eli5_chatGpt4)
+        data = (eli5_human, eli5_llama2, eli5_llama3, eli5_chatGpt3) #removed chat gpt4
         pickle.dump(data, file)
 
     return data
@@ -307,15 +312,15 @@ def get_openqa_calculations():
     openqa_json_data = read_json_file('Test-Data/open_qa.json')
 
     openqa_human = CalculationsObject('human', openqa_json_data, True)
-    openqa_llama2 = CalculationsObject('llama2', openqa_json_data, True)
-    openqa_llama3 = CalculationsObject('llama3', openqa_json_data, True)
+    #openqa_llama2 = CalculationsObject('llama2', openqa_json_data, True)
+    #openqa_llama3 = CalculationsObject('llama3', openqa_json_data, True)
     openqa_chatGpt3 = CalculationsObject('chatGpt3', openqa_json_data, True)
 
     openqa_chatGpt4 = CalculationsObject('chatGpt4', openqa_json_data, True)
 
     # Save the data to a file
     with open(data_file, "wb") as file:
-        data = (openqa_human, openqa_llama2, openqa_llama3, openqa_chatGpt3, openqa_chatGpt4)
+        data = (openqa_human, openqa_chatGpt3) #removed  openqa_llama2, openqa_llama3, openqa_chatGpt4
         pickle.dump(data, file)
 
     return data
@@ -435,7 +440,7 @@ def create_eli5_plots():
     plt.plot(smoothing_average(eli5_llama2.mean_distances, 10), label='Llama2', color='black')
     plt.plot(smoothing_average(eli5_llama3.mean_distances, 10), label='Llama3', color='red')
     plt.plot(smoothing_average(eli5_chatGpt3.mean_distances, 10), label='GPT3', color='green')
-    plt.plot(smoothing_average(eli5_chatGpt4.mean_distances, 10), label='GPT4', color='orange')
+    #plt.plot(smoothing_average(eli5_chatGpt4.mean_distances, 10), label='GPT4', color='orange')
     plt.title('Avg. Euclidean Distance')
     plt.xlabel('Answers')
     plt.ylabel('Average Distance')
@@ -521,7 +526,7 @@ def create_openqa_plots():
 
 def main():
     # To read, calculate and show prompt 1 data uncomment the following lines
-    create_prompt1_plots()
+    #create_prompt1_plots()
 
     # To read, calculate and show prompt 2 data uncomment the following lines
     # create_prompt2_plots()
