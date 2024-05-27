@@ -16,7 +16,6 @@ import json
 
 # Define the file path
 file_path = 'Test-Data/combined.json'
-
 # Read the JSON file
 with open(file_path, 'r') as file:
     data = json.load(file)
