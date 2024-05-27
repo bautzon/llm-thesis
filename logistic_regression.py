@@ -65,7 +65,7 @@ def logistic_regression_cos_var(train_human_cos_var, train_synthetic_cos_var, te
     plt.subplot(1, 2, 2)
     plt.scatter(x_test, y_test, color='blue', label='Actual')
     plt.scatter(x_test, y_pred, color='red', marker='x', label='Predicted')
-    
+
     # Add sigmoid curve
     x_values = np.linspace(x_train.min(), x_train.max(), 300)
     y_values = classifier.predict_proba(x_values.reshape(-1, 1))[:, 1]  # Get the probability of class 1
@@ -79,6 +79,7 @@ def logistic_regression_cos_var(train_human_cos_var, train_synthetic_cos_var, te
     plt.tight_layout()
     plt.show()
 
+
 # Functions for different train-test scenarios
 def train_on_prompt1_test_on_prompt1():
     logistic_regression_cos_var(
@@ -88,30 +89,33 @@ def train_on_prompt1_test_on_prompt1():
         prompt1_gpt4_student.cosine_variance_per_answer
     )
 
-<<<<<<< HEAD
+
 def train_on_prompt1_test_on_prompt2():
     logistic_regression_cos_var(
-        prompt1_human.cosine_variance_per_answer, 
+        prompt1_human.cosine_variance_per_answer,
         prompt1_gpt4_student.cosine_variance_per_answer,
         prompt2_human.cosine_variance_per_answer,
         prompt2_gpt4_student.cosine_variance_per_answer
     )
 
+
 def train_on_prompt2_test_on_prompt2():
     logistic_regression_cos_var(
-        prompt2_human.cosine_variance_per_answer, 
+        prompt2_human.cosine_variance_per_answer,
         prompt2_gpt4_student.cosine_variance_per_answer,
         prompt2_human.cosine_variance_per_answer,
         prompt2_gpt4_student.cosine_variance_per_answer
     )
 
+
 def train_on_prompt2_test_on_prompt1():
     logistic_regression_cos_var(
-        prompt2_human.cosine_variance_per_answer, 
+        prompt2_human.cosine_variance_per_answer,
         prompt2_gpt4_student.cosine_variance_per_answer,
         prompt1_human.cosine_variance_per_answer,
         prompt1_gpt4_student.cosine_variance_per_answer
     )
+
 
 def train_on_eli5_test_on_eli5():
     logistic_regression_cos_var(
@@ -120,31 +124,35 @@ def train_on_eli5_test_on_eli5():
         eli5_human.cosine_variance_per_answer,
         eli5_llama3.cosine_variance_per_answer
     )
-=======
-#Prompt1
-def call_prompt1():
-    logistic_regression_cos_var(prompt1_human.mean_cosine_variance,
-                                prompt1_gpt4_student.mean_cosine_variance)
-    logistic_regression_euclid_dist(prompt1_human.distances, prompt1_human.covariances, prompt1_gpt4_student.distances, prompt1_gpt4_student.covariances)
 
-#Prompt2
-def call_prompt2():
-    logistic_regression_cos_var(prompt2_human.mean_cosine_variance,
-                                prompt2_gpt4_student.mean_cosine_variance)
-    logistic_regression_euclid_dist(prompt2_human.distances, prompt2_human.covariances, prompt2_gpt4_student.distances, prompt2_gpt4_student.covariances)
 
-#ELI5
-def call_eli5():
-    logistic_regression_cos_var(eli5_human.mean_cosine_variance,
-                                eli5_llama3.mean_cosine_variance)
-    logistic_regression_euclid_dist(eli5_human.distances, eli5_human.covariances, eli5_llama3.distances, eli5_llama3.covariances)
+# Prompt1
+# def call_prompt1():
+#     logistic_regression_cos_var(prompt1_human.mean_cosine_variance,
+#                                 prompt1_gpt4_student.mean_cosine_variance)
+#     logistic_regression_euclid_dist(prompt1_human.distances, prompt1_human.covariances, prompt1_gpt4_student.distances, prompt1_gpt4_student.covariances)
 
-#OpenQA
-def call_openqa():
-    logistic_regression_cos_var(openqa_human.mean_cosine_variance,
-                                openqa_chatGpt3.mean_cosine_variance)
-    logistic_regression_euclid_dist(openqa_human.distances, openqa_human.covariances, openqa_chatGpt3.distances, openqa_chatGpt3.covariances)
->>>>>>> c68b20bfe9c94761b25a678bd6319493db8467af
+
+# Prompt2
+# def call_prompt2():
+#     logistic_regression_cos_var(prompt2_human.mean_cosine_variance,
+#                                 prompt2_gpt4_student.mean_cosine_variance)
+#     logistic_regression_euclid_dist(prompt2_human.distances, prompt2_human.covariances, prompt2_gpt4_student.distances, prompt2_gpt4_student.covariances)
+
+
+# ELI5
+# def call_eli5():
+#     logistic_regression_cos_var(eli5_human.mean_cosine_variance,
+#                                 eli5_llama3.mean_cosine_variance)
+#     logistic_regression_euclid_dist(eli5_human.distances, eli5_human.covariances, eli5_llama3.distances, eli5_llama3.covariances)
+
+
+# OpenQA
+# def call_openqa():
+#     logistic_regression_cos_var(openqa_human.mean_cosine_variance,
+#                                 openqa_chatGpt3.mean_cosine_variance)
+#     logistic_regression_euclid_dist(openqa_human.distances, openqa_human.covariances, openqa_chatGpt3.distances, openqa_chatGpt3.covariances)
+
 
 def train_on_eli5_test_on_prompt1():
     logistic_regression_cos_var(
@@ -154,6 +162,7 @@ def train_on_eli5_test_on_prompt1():
         prompt1_gpt4_student.cosine_variance_per_answer
     )
 
+
 def train_on_eli5_test_on_prompt2():
     logistic_regression_cos_var(
         eli5_human.cosine_variance_per_answer,
@@ -161,6 +170,7 @@ def train_on_eli5_test_on_prompt2():
         prompt2_human.cosine_variance_per_answer,
         prompt2_gpt4_student.cosine_variance_per_answer
     )
+
 
 def train_on_openqa_test_on_openqa():
     logistic_regression_cos_var(
@@ -170,6 +180,7 @@ def train_on_openqa_test_on_openqa():
         openqa_chatGpt3.cosine_variance_per_answer
     )
 
+
 def train_on_openqa_test_on_prompt1():
     logistic_regression_cos_var(
         openqa_human.cosine_variance_per_answer,
@@ -177,6 +188,7 @@ def train_on_openqa_test_on_prompt1():
         prompt1_human.cosine_variance_per_answer,
         prompt1_gpt4_student.cosine_variance_per_answer
     )
+
 
 def train_on_openqa_test_on_prompt2():
     logistic_regression_cos_var(
@@ -186,6 +198,7 @@ def train_on_openqa_test_on_prompt2():
         prompt2_gpt4_student.cosine_variance_per_answer
     )
 
+
 def train_on_openqa_test_on_eli5():
     logistic_regression_cos_var(
         openqa_human.cosine_variance_per_answer,
@@ -193,20 +206,22 @@ def train_on_openqa_test_on_eli5():
         eli5_human.cosine_variance_per_answer,
         eli5_llama3.cosine_variance_per_answer
     )
+
+
 def train_on_prompt1_test_on_eli5():
     logistic_regression_cos_var(
-        prompt1_human.cosine_variance_per_answer, 
+        prompt1_human.cosine_variance_per_answer,
         prompt1_gpt4_student.cosine_variance_per_answer,
         eli5_human.cosine_variance_per_answer,
         eli5_llama3.cosine_variance_per_answer
         )
-    
+
 
 # Main function to run the chosen analysis
 def main():
     # Uncomment the function call you want to test
-    #train_on_prompt1_test_on_prompt1()
-    #train_on_prompt1_test_on_prompt2()
+    # train_on_prompt1_test_on_prompt1()
+    # train_on_prompt1_test_on_prompt2()
     # train_on_prompt2_test_on_prompt2()
     # train_on_prompt2_test_on_prompt1()
     # train_on_eli5_test_on_eli5()
@@ -217,6 +232,7 @@ def main():
     # train_on_openqa_test_on_prompt2()
     # train_on_openqa_test_on_eli5()
     train_on_prompt1_test_on_eli5()
+
 
 if __name__ == "__main__":
     main()

@@ -31,7 +31,7 @@ async function generateGpt(question) {
     return completion;
 }
 
-fs.readFile('eli5_llama2.json', 'utf8', (err, data) => {
+fs.readFile('eli5_all_models.json', 'utf8', (err, data) => {
     if (err) {
         console.error('Error reading file:', err);
         return;
@@ -61,7 +61,7 @@ fs.readFile('eli5_llama2.json', 'utf8', (err, data) => {
                     llama2: answer.llama2,
                     llama3: answer.llama3,
                     chatGpt3: answer.chatGpt3,
-                    chatGpt4: response.choices[0].message.content.replace(/\n/g, " "),
+                    chatGpt4: answer.chatGpt4,
                     human: answer.human
                 };
 

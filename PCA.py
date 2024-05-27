@@ -27,7 +27,7 @@ human_creator = ['human'] * 200
 
 essay_dataFrame = pd.DataFrame({
      "distance": prompt1_ai_distances + prompt2_ai_distances + prompt1_human.mean_distances + prompt2_human.mean_distances,
-     "covariance":prompt1_ai_covariances + prompt2_ai_covariances + prompt1_human.mean_covariances + prompt2_human.mean_covariances,
+     "covariance": prompt1_ai_covariances + prompt2_ai_covariances + prompt1_human.mean_covariances + prompt2_human.mean_covariances,
      "cosine variance": prompt1_ai_cosine_variance + prompt2_ai_cosine_variance + prompt1_human.mean_cosine_variance + prompt2_human.mean_cosine_variance,
      "creator": ai_creator + human_creator
 })
