@@ -9,9 +9,10 @@ from scipy.spatial.distance import cosine, euclidean  # Import the cosine functi
 # If set to True, the data will be recalculated and saved to a file
 # If set to False, the data will be loaded from the file
 GENERATE_NEW_DATA = True
-# MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+
+MODEL = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
 # MODEL = KeyedVectors.load_word2vec_format("models/crawl-300d-2M.vec")
-MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
+# MODEL = KeyedVectors.load_word2vec_format("models/wiki-news-300d-1M.vec")
 
 
 class CalculationsObject:
