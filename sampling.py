@@ -18,8 +18,8 @@ import os
 # Define global parameters
 FILE_PATH = 'Test-Data/combined.json'
 MODEL_NAME = 'gpt2'
-TOP_K = 100
-TOP_P = 0.96
+TOP_K = 50
+TOP_P = 1
 
 # Define paths for pickle files
 PICKLE_DIR = 'pickles'
@@ -76,21 +76,25 @@ def get_word_rank(predictions, target_word):
             return rank, prob
     return None, None
 
-def collect_ranks_and_probs(word_list, model, tokenizer):
-    ranks = []
-    probs = []
-    for i in range(len(word_list) - 1):
-        prompt = ' '.join(word_list[:i+1])
-        next_word = word_list[i+1]
-        predictions = get_top_p_predictions(model, tokenizer, prompt)
-        rank, prob = get_word_rank(predictions, next_word)
-        if rank is not None:
-            ranks.append(rank)
-            probs.append(prob)
-        else:
-            ranks.append(TOP_K + 1)  # If not in top-p, assign a rank larger than top_k
-            probs.append(0)
-    return ranks, probs
+def collect_ranks_and_probs(word_lists, model, tokenizer):
+    all_ranks = []
+    all_probs = []
+    for word_list in word_lists:
+        ranks, probs = [], []
+        for i in range(len(word_list) - 1):
+            prompt = ' '.join(word_list[:i+1])
+            next_word = word_list[i+1]
+            predictions = get_top_p_predictions(model, tokenizer, prompt)
+            rank, prob = get_word_rank(predictions, next_word)
+            if rank is not None:
+                ranks.append(rank)
+                probs.append(prob)
+            else:
+                ranks.append(TOP_K + 1)  # If not in top-p, assign a rank larger than top_k
+                probs.append(0)
+        all_ranks.extend(ranks)
+        all_probs.extend(probs)
+    return all_ranks, all_probs
 
 def count_rank_occurrences_in_range(ranks, start, end):
     return sum(1 for rank in ranks if start < rank <= end)
@@ -162,12 +166,9 @@ def main():
         synthetic_probs = load_from_pickle(SYNTHETIC_PROBS_PATH)
         print("Loaded ranks and probabilities from pickle files.")
     except (FileNotFoundError, EOFError):
-        # Collect ranks and probabilities for human and synthetic answers
-        first_entry_hum = human_answers[0]
-        first_entry_syn = synthetic_answers[0]
-
-        human_ranks, human_probs = collect_ranks_and_probs(first_entry_hum, model, tokenizer)
-        synthetic_ranks, synthetic_probs = collect_ranks_and_probs(first_entry_syn, model, tokenizer)
+        # Collect ranks and probabilities for all human and synthetic answers
+        human_ranks, human_probs = collect_ranks_and_probs(human_answers, model, tokenizer)
+        synthetic_ranks, synthetic_probs = collect_ranks_and_probs(synthetic_answers, model, tokenizer)
 
         # Save ranks and probabilities to pickle files
         save_to_pickle(human_ranks, HUMAN_RANKS_PATH)
@@ -176,7 +177,7 @@ def main():
         save_to_pickle(synthetic_probs, SYNTHETIC_PROBS_PATH)
         print("Computed and saved ranks and probabilities to pickle files.")
 
- 
+
     # Count rank occurrences in increments of 10
     human_rank_counts = count_all_rank_occurrences(human_ranks)
     synthetic_rank_counts = count_all_rank_occurrences(synthetic_ranks)
