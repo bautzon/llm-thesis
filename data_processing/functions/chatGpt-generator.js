@@ -18,14 +18,14 @@ async function generate() {
     ],
     model: "gpt-4",
   });
-  
+
   //console.log(completion.choices[0].message.content);
   return completion;
 }
 
 async function main() {
     let answers = {Answers: []};
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 10; i++) {
         let res = await generate();
             answers.Answers.push({
                 id: i+1,
@@ -33,7 +33,7 @@ async function main() {
                 prompt: prompt_2_student,
                 answer: res.choices[0].message.content.replace(/\n/g, " ")
             });
-            fs.writeFileSync("prompt1_gpt4_student.json", JSON.stringify(answers, null, 4));
+            fs.writeFileSync("prompt2_gpt4_student_take2.json", JSON.stringify(answers, null, 4));
     }
 }
 
