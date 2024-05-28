@@ -4,20 +4,44 @@ import json
 import os
 import pickle
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def plot_perplexities(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
     plt.figure(figsize=(12, 6))
 
     # Plot perplexities
-    plt.hist(human_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='left', label='Human Perplexities', color='blue', edgecolor='blue')
-    #plt.hist(llama3_perplexities, bins=20, alpha=0.7, histtype='step', label='llama3 Perplexities', edgecolor='m')
-    plt.hist(gpt3_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='mid', label='Gpt3 Perplexities',color='magenta', edgecolor='magenta')
-    plt.hist(gpt4_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='right', label='Gpt4 Perplexities', color='purple', edgecolor='purple')
+    plt.hist(human_perplexities, bins=20, alpha=0.7, histtype='step', align='right', label='Human Perplexities', color='blue', edgecolor='blue')
+    plt.hist(llama3_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='left', label='llama3 Perplexities', color='orange', edgecolor='orange')
+    plt.hist(gpt3_perplexities, bins=20, alpha=0.7, histtype='step', align='mid', label='Gpt3 Perplexities',color='magenta', edgecolor='magenta')
+    plt.hist(gpt4_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='right', label='Gpt4 Perplexities', color='red', edgecolor='red')
 
     # Add titles and labels
     plt.title('Histogram of Perplexities')
     plt.xlabel('Perplexity')
     plt.ylabel('Frequency')
+
+    # Add a legend
+    plt.legend(loc='upper right')
+
+    # Show grid
+    plt.grid(axis='y', alpha=0.75)
+
+    # Display the plot
+    plt.show()
+
+def plot_KDE(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
+    plt.figure(figsize=(12, 6))
+
+    # Plot KDEs for perplexities
+    sns.kdeplot(human_perplexities, fill=True, label='Human Perplexities', color='blue')
+    sns.kdeplot(llama3_perplexities, fill=True, label='Llama3 Perplexities', color='green')
+    sns.kdeplot(gpt3_perplexities, fill=True, label='Gpt3 Perplexities', color='magenta')
+    sns.kdeplot(gpt4_perplexities, fill=True, label='Gpt4 Perplexities', color='red')
+
+    # Add titles and labels
+    plt.title('Kernel Density Estimation of Perplexities')
+    plt.xlabel('Perplexity')
+    plt.ylabel('Density')
 
     # Add a legend
     plt.legend(loc='upper right')
@@ -140,11 +164,12 @@ def load_or_calculate_perplexities(data, human_output_file, llama3_output_file, 
     return human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities
 
 # Example usage
-FILE_PATH = 'data_cleaning/prompt1_merged.json'  # Your specified JSON file path
-HUMAN_OUTPUT_FILE = 'pickles/human_perplexities_prompt_1.pkl'
-LLAMA3_OUTPUT_FILE = 'pickles/llama3_perplexities_prompt_1.pkl'
-GPT3_OUTPUT_FILE = 'pickles/gpt3_perplexitiesprompt_1.pkl'
-GPT4_OUTPUT_FILE = 'pickles/gpt4_perplexities_prompt_1.pkl'
+#FILE_PATH = 'data_cleaning/prompt1_merged.json'
+FILE_PATH = 'data_cleaning/prompt2_merged.json'  # Your specified JSON file path
+HUMAN_OUTPUT_FILE = 'pickles/human_perplexities_prompt_2.pkl'
+LLAMA3_OUTPUT_FILE = 'pickles/llama3_perplexities_prompt_2.pkl'
+GPT3_OUTPUT_FILE = 'pickles/gpt3_perplexitiesprompt_2.pkl'
+GPT4_OUTPUT_FILE = 'pickles/gpt4_perplexities_prompt_2.pkl'
 
 # Read JSON data
 data = read_json(FILE_PATH)
@@ -154,3 +179,4 @@ human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities = 
 
 # Plot the perplexities
 plot_perplexities(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
+plot_KDE(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
