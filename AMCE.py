@@ -5,6 +5,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 # Load pre-trained model and tokenizer
 model = GPT2LMHeadModel.from_pretrained('gpt2')
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+tokenizer.pad_token = tokenizer.eos_token
 
 # Example text and encoding
 text = "This is a test sentence for visualizing perplexity."
