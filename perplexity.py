@@ -6,11 +6,12 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def plot_perplexities(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
+def plot_perplexities(human_perplexities, llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
     plt.figure(figsize=(12, 6))
 
     # Plot perplexities
     plt.hist(human_perplexities, bins=20, alpha=0.7, histtype='step', align='right', label='Human Perplexities', color='blue', edgecolor='blue')
+    #plt.hist(llama2_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='left', label='llama2 Perplexities', color='green', edgecolor='green')
     plt.hist(llama3_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='left', label='llama3 Perplexities', color='orange', edgecolor='orange')
     plt.hist(gpt3_perplexities, bins=20, alpha=0.7, histtype='step', align='mid', label='Gpt3 Perplexities',color='magenta', edgecolor='magenta')
     plt.hist(gpt4_perplexities, bins=20, alpha=0.7, histtype='stepfilled', align='right', label='Gpt4 Perplexities', color='red', edgecolor='red')
@@ -29,12 +30,13 @@ def plot_perplexities(human_perplexities, llama3_perplexities, gpt3_perplexities
     # Display the plot
     plt.show()
 
-def plot_KDE(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
+def plot_KDE(human_perplexities, llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities):
     plt.figure(figsize=(12, 6))
 
     # Plot KDEs for perplexities
     sns.kdeplot(human_perplexities, fill=True, label='Human Perplexities', color='blue')
-    sns.kdeplot(llama3_perplexities, fill=True, label='Llama3 Perplexities', color='green')
+    #sns.kdeplot(llama2_perplexities, fill=True, label='Llama2 Perplexities', color='green')
+    sns.kdeplot(llama3_perplexities, fill=True, label='Llama3 Perplexities', color='orange')
     sns.kdeplot(gpt3_perplexities, fill=True, label='Gpt3 Perplexities', color='magenta')
     sns.kdeplot(gpt4_perplexities, fill=True, label='Gpt4 Perplexities', color='red')
 
@@ -79,34 +81,39 @@ def read_json(file_path):
     return data
 
 # Function to adjust the token length of both human and synthetic answers to the minimum length
-def adjust_token_lengths(tokenizer, human_answers, llama3_answers, gpt3_answers, gpt4_answers):
+def adjust_token_lengths(tokenizer, human_answers, llama2_answers, llama3_answers, gpt3_answers, gpt4_answers):
     adjusted_human_answers = []
+    adjusted_llama2_answers = []
     adjusted_llama3_answers = []
     adjusted_gpt3_answers = []
     adjusted_gpt4_answers = []
 
-    for human_answer, llama3_answer, gpt3_answer, gpt4_answer in zip(human_answers, llama3_answers, gpt3_answers, gpt4_answers):
+    for human_answer,llama2_answer, llama3_answer, gpt3_answer, gpt4_answer in zip(human_answers, llama2_answers, llama3_answers, gpt3_answers, gpt4_answers):
         human_tokens = tokenizer.tokenize(human_answer)
+        llama2_tokens = tokenizer.tokenize(llama3_answer)
         llama3_tokens = tokenizer.tokenize(llama3_answer)
         gpt3_tokens = tokenizer.tokenize(gpt3_answer)
         gpt4_tokens = tokenizer.tokenize(gpt4_answer)
-        min_length = min(len(human_tokens), len(llama3_tokens), len(gpt3_tokens), len(gpt4_tokens))
+        min_length = min(len(human_tokens), len(llama2_tokens), len(llama3_tokens), len(gpt3_tokens), len(gpt4_tokens))
 
         human_tokens = human_tokens[:min_length]
+        llama2_tokens = llama2_tokens[:min_length]
         llama3_tokens = llama3_tokens[:min_length]
         gpt3_tokens = gpt3_tokens[:min_length]
         gpt4_tokens = gpt4_tokens[:min_length]
 
         adjusted_human_answers.append(tokenizer.convert_tokens_to_string(human_tokens))
+        adjusted_llama2_answers.append(tokenizer.convert_tokens_to_string(llama2_tokens))
         adjusted_llama3_answers.append(tokenizer.convert_tokens_to_string(llama3_tokens))
         adjusted_gpt3_answers.append(tokenizer.convert_tokens_to_string(gpt3_tokens))
         adjusted_gpt4_answers.append(tokenizer.convert_tokens_to_string(gpt4_tokens))
 
-    return adjusted_human_answers, adjusted_llama3_answers, adjusted_gpt3_answers, adjusted_gpt4_answers
+    return adjusted_human_answers, adjusted_llama2_answers, adjusted_llama3_answers, adjusted_gpt3_answers, adjusted_gpt4_answers
 
 # Function to calculate perplexities and save them
-def calculate_and_save_perplexities(data, human_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file):
+def calculate_and_save_perplexities(data, human_output_file, llama2_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file):
     human_answers = [entry['human'] for entry in data['Answers']]
+    llama2_answers = [entry['llama2'] for entry in data['Answers']]
     llama3_answers = [entry['llama3'] for entry in data['Answers']]
     gpt3_answers = [entry['chatGpt3'] for entry in data['Answers']]
     gpt4_answers = [entry['chatGpt4'] for entry in data['Answers']]
@@ -115,10 +122,11 @@ def calculate_and_save_perplexities(data, human_output_file, llama3_output_file,
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
     # Adjust all answers to have the same token length
-    human_answers, llama3_answers, gpt3_answers, gpt4_answers = adjust_token_lengths(tokenizer, human_answers, llama3_answers, gpt3_answers, gpt4_answers)
+    human_answers,llama2_answers, llama3_answers, gpt3_answers, gpt4_answers = adjust_token_lengths(tokenizer, human_answers, llama2_answers, llama3_answers, gpt3_answers, gpt4_answers)
 
     # Calculate perplexities
     human_perplexities = [calculate_perplexity(answer) for answer in human_answers]
+    llama2_perplexities = [calculate_perplexity(answer) for answer in llama2_answers]
     llama3_perplexities = [calculate_perplexity(answer) for answer in llama3_answers]
     gpt3_perplexities = [calculate_perplexity(answer) for answer in gpt3_answers]
     gpt4_perplexities = [calculate_perplexity(answer) for answer in gpt4_answers]
@@ -130,6 +138,8 @@ def calculate_and_save_perplexities(data, human_output_file, llama3_output_file,
     # Store the perplexities in pickle files
     with open(human_output_file, 'wb') as file:
         pickle.dump(human_perplexities, file)
+    with open(llama2_output_file, 'wb') as file:
+        pickle.dump(llama2_perplexities, file)
     with open(llama3_output_file, 'wb') as file:
         pickle.dump(llama3_perplexities, file)
     with open(gpt3_output_file, 'wb') as file:
@@ -138,10 +148,12 @@ def calculate_and_save_perplexities(data, human_output_file, llama3_output_file,
         pickle.dump(gpt4_perplexities, file)
 
 # Check if pickle files exist and load from them if they do
-def load_or_calculate_perplexities(data, human_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file):
-    if os.path.exists(human_output_file) and os.path.exists(llama3_output_file) and os.path.exists(gpt3_output_file) and os.path.exists(gpt4_output_file):
+def load_or_calculate_perplexities(data, human_output_file,llama2_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file):
+    if os.path.exists(human_output_file) and os.path.exists(llama2_output_file) and os.path.exists(llama3_output_file) and os.path.exists(gpt3_output_file) and os.path.exists(gpt4_output_file):
         with open(human_output_file, 'rb') as file:
             human_perplexities = pickle.load(file)
+        with open(llama2_output_file, 'rb') as file:
+            llama2_perplexities = pickle.load(file)
         with open(llama3_output_file, 'rb') as file:
             llama3_perplexities = pickle.load(file)
         with open(gpt3_output_file, 'rb') as file:
@@ -151,9 +163,11 @@ def load_or_calculate_perplexities(data, human_output_file, llama3_output_file, 
         print("Loaded perplexities from pickle files.")
     else:
         print("Calculating perplexities...")
-        calculate_and_save_perplexities(data, human_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file)
+        calculate_and_save_perplexities(data, human_output_file,llama2_output_file, llama3_output_file, gpt3_output_file, gpt4_output_file)
         with open(human_output_file, 'rb') as file:
             human_perplexities = pickle.load(file)
+        with open(llama2_output_file, 'rb') as file:
+            llama2_perplexities = pickle.load(file)
         with open(llama3_output_file, 'rb') as file:
             llama3_perplexities = pickle.load(file)
         with open(gpt3_output_file, 'rb') as file:
@@ -161,22 +175,23 @@ def load_or_calculate_perplexities(data, human_output_file, llama3_output_file, 
         with open(gpt4_output_file, 'rb') as file:
             gpt4_perplexities = pickle.load(file)
 
-    return human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities
+    return human_perplexities,llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities
 
 # Example usage
 #FILE_PATH = 'data_cleaning/prompt1_merged.json'
-FILE_PATH = 'data_cleaning/prompt2_merged.json'  # Your specified JSON file path
-HUMAN_OUTPUT_FILE = 'pickles/human_perplexities_prompt_2.pkl'
-LLAMA3_OUTPUT_FILE = 'pickles/llama3_perplexities_prompt_2.pkl'
-GPT3_OUTPUT_FILE = 'pickles/gpt3_perplexitiesprompt_2.pkl'
-GPT4_OUTPUT_FILE = 'pickles/gpt4_perplexities_prompt_2.pkl'
+FILE_PATH = 'data_cleaning/prompt1_merged.json'  # Your specified JSON file path
+HUMAN_OUTPUT_FILE = 'pickles/human_perplexities_prompt_1.pkl'
+LLAMA2_OUTPUT_FILE = 'pickles/llama2_perplexities_prompt_1.pkl'
+LLAMA3_OUTPUT_FILE = 'pickles/llama3_perplexities_prompt_1.pkl'
+GPT3_OUTPUT_FILE = 'pickles/gpt3_perplexitiesprompt_1.pkl'
+GPT4_OUTPUT_FILE = 'pickles/gpt4_perplexities_prompt_1.pkl'
 
 # Read JSON data
 data = read_json(FILE_PATH)
 
 # Load or calculate perplexities
-human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities = load_or_calculate_perplexities(data, HUMAN_OUTPUT_FILE, LLAMA3_OUTPUT_FILE, GPT3_OUTPUT_FILE, GPT4_OUTPUT_FILE)
+human_perplexities, llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities = load_or_calculate_perplexities(data, HUMAN_OUTPUT_FILE, LLAMA2_OUTPUT_FILE, LLAMA3_OUTPUT_FILE, GPT3_OUTPUT_FILE, GPT4_OUTPUT_FILE)
 
 # Plot the perplexities
-plot_perplexities(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
-plot_KDE(human_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
+plot_perplexities(human_perplexities,llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
+plot_KDE(human_perplexities,llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities)
