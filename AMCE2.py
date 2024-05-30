@@ -90,5 +90,5 @@ nested_list = [
     ("Example text from GPT model.", "Example text from a human."),
     ("Another example text from GPT model.", "Another example text from a human.")
 ]
-scores = compute_score(nested_list, top_w=0.5)
+scores = compute_score(nested_list, top_w=0.2)
 print(f"Cross-entropy scores: {scores}")
