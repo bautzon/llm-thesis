@@ -62,33 +62,29 @@ def weighted_attention_sum(attention_mask, top_w=1.0):
 def cross_entropy(log_probs_1, log_probs_2):
     return -(log_probs_1 * log_probs_2).sum()
 
-def compute_score(nested_list, top_w=1.0, top_p=0.9, top_k=100):
+def compute_cross_entropy_for_list(sample_list, top_w=1.0, top_p=0.9, top_k=100):
     results = []
     
-    for text_1, text_2 in nested_list:
-        text_1 = preprocess_text(text_1)
-        text_2 = preprocess_text(text_2)
+    for text in sample_list:
+        text = preprocess_text(text)
         
-        log_prob_1_bert, attention_mask_1_bert = compute_log_probs(bert_model, bert_tokenizer, text_1, top_p, top_k)
-        log_prob_2_bert, attention_mask_2_bert = compute_log_probs(bert_model, bert_tokenizer, text_2, top_p, top_k)
+        log_prob_bert, attention_mask_bert = compute_log_probs(bert_model, bert_tokenizer, text, top_p, top_k)
+        log_prob_gpt2, attention_mask_gpt2 = compute_log_probs(gpt2_model, gpt2_tokenizer, text, top_p, top_k)
         
-        log_prob_1_gpt2, attention_mask_1_gpt2 = compute_log_probs(gpt2_model, gpt2_tokenizer, text_1, top_p, top_k)
-        log_prob_2_gpt2, attention_mask_2_gpt2 = compute_log_probs(gpt2_model, gpt2_tokenizer, text_2, top_p, top_k)
+        weighted_attention = weighted_attention_sum(attention_mask_bert, top_w) + weighted_attention_sum(attention_mask_gpt2, top_w)
         
-        weighted_attention_1 = weighted_attention_sum(attention_mask_1_bert, top_w) + weighted_attention_sum(attention_mask_1_gpt2, top_w)
-        weighted_attention_2 = weighted_attention_sum(attention_mask_2_bert, top_w) + weighted_attention_sum(attention_mask_2_gpt2, top_w)
-        
-        cross_entropy_score = cross_entropy(log_prob_1_bert, log_prob_1_gpt2) + cross_entropy(log_prob_2_bert, log_prob_2_gpt2)
-        cross_entropy_score += weighted_attention_1 + weighted_attention_2
+        cross_entropy_score = cross_entropy(log_prob_bert, log_prob_gpt2) + weighted_attention
         
         results.append(cross_entropy_score.item())
     
     return results
 
-# Debugging print statements
-nested_list = [
-    ("Example text from GPT model.", "Example text from a human."),
-    ("Another example text from GPT model.", "Another example text from a human.")
-]
-scores = compute_score(nested_list, top_w=0.2)
-print(f"Cross-entropy scores: {scores}")
+# Example usage
+sample1 = ["sample 1 here  ", " another sample here"]
+sample2 = ["sample 3 here  ", " a 4 sample here"]
+
+scores_sample1 = compute_cross_entropy_for_list(sample1, top_w=0.5)
+scores_sample2 = compute_cross_entropy_for_list(sample2, top_w=0.5)
+
+print(f"Cross-entropy scores for sample1: {scores_sample1}")
+print(f"Cross-entropy scores for sample2: {scores_sample2}")
