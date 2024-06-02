@@ -1,7 +1,10 @@
 import fs from "fs";
 
-// List of JSON files to merge
-const files = ["prompt1_human.json", "../Test-Data/prompt1_llama2_student.json", "prompt1_llama3_student.json", "../Test-Data/output_chatGpt_prompt1_Student.json", "../Test-Data/prompt1_gpt4_student.json"]; // Add your file names here
+// List of JSON files for prompt 1
+// const files = ["prompt1_human.json", "../Test-Data/prompt1_llama2_student.json", "prompt1_llama3_student.json", "../Test-Data/output_chatGpt_prompt1_Student.json", "../Test-Data/prompt1_gpt4_student.json"]; // Add your file names here
+
+// Prompt 2
+const files = ["../../Test-Data/prompt_2_human_output.json", "../../Test-Data/prompt2_llama2_student.json", "../../Test-Data/prompt_2_ai_output.json", "../../Test-Data/output_chatGpt_prompt2_Student.json", "../../Test-Data/prompt2_gpt4_student.json"];
 
 let mergedData = {};
 
@@ -36,4 +39,4 @@ const mergedArray = Object.values(mergedData);
 const result = JSON.stringify({ Answers: mergedArray }, null, 2);
 
 // Write the result back to a new JSON file
-fs.writeFileSync('prompt1_merged.json', result);
+fs.writeFileSync('prompt2_merged_2.json', result);
