@@ -54,6 +54,7 @@ def plot_KDE(human_perplexities, llama2_perplexities, llama3_perplexities, gpt3_
     # Display the plot
     plt.show()
 
+
 def calculate_perplexity(text):
     # Load pre-trained model (weights)
     model = GPT2LMHeadModel.from_pretrained('gpt2')
@@ -74,6 +75,7 @@ def calculate_perplexity(text):
 
     return perplexity.item()
 
+<<<<<<< HEAD
 # Function to read JSON file
 def read_json(file_path):
     with open(file_path, 'r') as file:
@@ -176,6 +178,8 @@ def load_or_calculate_perplexities(data, human_output_file,llama2_output_file, l
             gpt4_perplexities = pickle.load(file)
 
     return human_perplexities,llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities
+=======
+>>>>>>> 5078517ca55be9ffb26a577cc0607796bd630a23
 
 # Example usage
 #FILE_PATH = 'data_cleaning/prompt1_merged.json'
@@ -186,8 +190,19 @@ LLAMA3_OUTPUT_FILE = 'pickles/llama3_perplexities_prompt_1.pkl'
 GPT3_OUTPUT_FILE = 'pickles/gpt3_perplexitiesprompt_1.pkl'
 GPT4_OUTPUT_FILE = 'pickles/gpt4_perplexities_prompt_1.pkl'
 
+<<<<<<< HEAD
 # Read JSON data
 data = read_json(FILE_PATH)
+=======
+perplexity1 = calculate_perplexity(text1)
+perplexity2 = calculate_perplexity(text2)
+perplexity3 = calculate_perplexity(text3)
+perplexity4 = calculate_perplexity(text)
+print(f'Perplexity1: {perplexity1}')
+print(f'Perplexity2: {perplexity2}')
+print(f'Perplexity3: {perplexity3}')
+print(f'Perplexity: {perplexity4}')
+>>>>>>> 5078517ca55be9ffb26a577cc0607796bd630a23
 
 # Load or calculate perplexities
 human_perplexities, llama2_perplexities, llama3_perplexities, gpt3_perplexities, gpt4_perplexities = load_or_calculate_perplexities(data, HUMAN_OUTPUT_FILE, LLAMA2_OUTPUT_FILE, LLAMA3_OUTPUT_FILE, GPT3_OUTPUT_FILE, GPT4_OUTPUT_FILE)
