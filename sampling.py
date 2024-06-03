@@ -18,7 +18,7 @@ import os
 # Define global parameters
 FILE_PATH = 'Test-Data/combined.json'
 MODEL_NAME = 'gpt2'
-TOP_K = 50
+TOP_K = 100
 TOP_P = 1
 
 # Define paths for pickle files
